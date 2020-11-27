@@ -1,7 +1,7 @@
 package mx.com.nmp.eventos.controller;
 
 import mx.com.nmp.eventos.model.LogDTO;
-import mx.com.nmp.eventos.repository.ServiceLog;
+import mx.com.nmp.eventos.service.ServiceLogImplement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +16,7 @@ import java.util.List;
 public class ControllerLog {
 
     @Autowired
-    private ServiceLog serviceLog;
+    private ServiceLogImplement serviceLog;
 
     @PostMapping("/addLogs")
     public ResponseEntity<?> agregaLogs(@RequestBody List<LogDTO> logs){

@@ -4,9 +4,11 @@ import mx.com.nmp.eventos.model.LogDTO;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.repository.ServiceLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class ServiceLogImplement implements ServiceLog {
 
     @Autowired

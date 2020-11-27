@@ -1,10 +1,13 @@
 package mx.com.nmp.eventos.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.data.annotation.Id;
 
 import java.util.Date;
 
 public class LogDTO {
+    @Id
+    private String id;
     @JsonProperty("message.descripcion")
     private String descripcion;
     private Date startTime;
