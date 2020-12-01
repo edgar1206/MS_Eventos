@@ -1,4 +1,4 @@
-package mx.com.nmp.eventos.model;
+package mx.com.nmp.eventos.model.indicelogs;
 
 public class Location {
 

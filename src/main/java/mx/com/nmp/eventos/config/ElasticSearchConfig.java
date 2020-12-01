@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+//@Configuration
 public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient> {
 
     private static final Logger log = LoggerFactory.getLogger(ElasticSearchConfig.class);

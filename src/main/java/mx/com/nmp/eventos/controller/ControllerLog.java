@@ -1,6 +1,6 @@
 package mx.com.nmp.eventos.controller;
 
-import mx.com.nmp.eventos.model.LogDTO;
+import mx.com.nmp.eventos.model.indicelogs.LogDTO;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

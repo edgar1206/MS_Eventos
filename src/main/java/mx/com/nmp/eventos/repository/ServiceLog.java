@@ -1,6 +1,6 @@
 package mx.com.nmp.eventos.repository;
 
-import mx.com.nmp.eventos.model.LogDTO;
+import mx.com.nmp.eventos.model.indicelogs.LogDTO;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package mx.com.nmp.eventos.model;
+package mx.com.nmp.eventos.model.indicelogs;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
