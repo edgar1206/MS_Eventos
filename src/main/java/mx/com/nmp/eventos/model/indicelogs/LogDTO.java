@@ -9,7 +9,7 @@ import java.util.Date;
 
 
 @TypeAlias("Log")
-@Document(indexName = "logs")
+@Document(indexName = "indice-evento")
 public class LogDTO {
 
     @Id

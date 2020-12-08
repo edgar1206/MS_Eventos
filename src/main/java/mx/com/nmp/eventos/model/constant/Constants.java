@@ -6,52 +6,26 @@ import org.springframework.stereotype.Component;
 @Component
 public class Constants {
 
-    private static String HOST;
-    private static String USERNAME;
-    private static String PASSWORD;
-    private static String EXCHANGE;
-    private static String QUEUE;
-    private static String ROUTING;
+    public static String ELASTIC_HOST;
+    public static String ELASTIC_USER;
+    public static String ELASTIC_IN;
+    public static String ELASTIC_PROTOCOL;
+    public static int ELASTIC_PORT;
 
-    public Constants(@Value("${spring.rabbitmq.host}") String HOST,
-                     @Value("${spring.rabbitmq.username}") String USERNAME,
-                     @Value("${spring.rabbitmq.password}") String PASSWORD,
-                     @Value("${spring.rabbitmq.exchange}") String EXCHANGE,
-                     @Value("${spring.rabbitmq.queue}") String QUEUE,
-                     @Value("${spring.rabbitmq.routingkey}") String ROUTING)
+    public Constants(@Value("${elasticsearch.host}") String ELASTIC_HOST,
+                     @Value("${elasticsearch.protocol}") String ELASTIC_PROTOCOL,
+                     @Value("${elasticsearch.port}") int ELASTIC_PORT,
+                     @Value("${elasticsearch.user}") String ELASTIC_USER,
+                     @Value("${elasticsearch.password}") String ELASTIC_IN)
+
     {
 
-        Constants.HOST = HOST;
-        Constants.USERNAME = USERNAME;
-        Constants.PASSWORD = PASSWORD;
-        Constants.EXCHANGE = EXCHANGE;
-        Constants.QUEUE = QUEUE;
-        Constants.ROUTING = ROUTING;
+        Constants.ELASTIC_HOST = ELASTIC_HOST;
+        Constants.ELASTIC_PROTOCOL = ELASTIC_PROTOCOL;
+        Constants.ELASTIC_PORT = ELASTIC_PORT;
+        Constants.ELASTIC_USER = ELASTIC_USER;
+        Constants.ELASTIC_IN = ELASTIC_IN;
 
-    }
-
-    public static String getHOST() {
-        return HOST;
-    }
-
-    public static String getUSERNAME() {
-        return USERNAME;
-    }
-
-    public static String getPASSWORD() {
-        return PASSWORD;
-    }
-
-    public static String getEXCHANGE() {
-        return EXCHANGE;
-    }
-
-    public static String getQUEUE() {
-        return QUEUE;
-    }
-
-    public static String getROUTING() {
-        return ROUTING;
     }
 
 }

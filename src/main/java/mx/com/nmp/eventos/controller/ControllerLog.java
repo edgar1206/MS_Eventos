@@ -1,6 +1,8 @@
 package mx.com.nmp.eventos.controller;
 
+import com.google.gson.Gson;
 import mx.com.nmp.eventos.model.indicelogs.LogDTO;
+import mx.com.nmp.eventos.model.nr.LogIncidencia;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,8 +28,12 @@ public class ControllerLog {
 
     @PostMapping("/addLog")
     public ResponseEntity<?> agregaLog(@RequestBody LogDTO log){
-        serviceLog.saveLog(log);
-        return null;
+        try{
+            serviceLog.saveLog(log);
+            return ResponseEntity.ok().build();
+        }catch (Exception e){
+            return ResponseEntity.badRequest().build();
+        }
     }
 
 }

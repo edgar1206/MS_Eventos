@@ -14,21 +14,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.context.annotation.Configuration;
 
-//@Configuration
+@Configuration
 public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient> {
 
     private static final Logger log = LoggerFactory.getLogger(ElasticSearchConfig.class);
+
     private RestHighLevelClient restHighLevelClient;
-    @Value("${elasticsearch.host}")
-    private String host;
-    @Value("${elasticsearch.protocol}")
-    private String protocol;
-    @Value("${elasticsearch.port}")
-    private int port;
+
     @Value("${elasticsearch.user}")
-    private String user;
+    String ELASTIC_USER;
     @Value("${elasticsearch.password}")
-    private String password;
+    String ELASTIC_IN;
+    @Value("${elasticsearch.host}")
+    private String ELASTIC_HOST;
+    @Value("${elasticsearch.port}")
+    private int ELASTIC_PORT;
+    @Value("${elasticsearch.protocol}")
+    private String ELASTIC_PROTOCOL;
 
     @Override
     public Class<RestHighLevelClient> getObjectType() {
@@ -48,9 +50,9 @@ public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient
     private RestHighLevelClient buildClient() {
         log.info("conectando con elastic");
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(ELASTIC_USER, ELASTIC_IN));
         try {
-            restHighLevelClient = new RestHighLevelClient(RestClient.builder(new HttpHost(host, port, protocol))
+            restHighLevelClient = new RestHighLevelClient(RestClient.builder(new HttpHost(ELASTIC_HOST, ELASTIC_PORT, ELASTIC_PROTOCOL))
                     .setHttpClientConfigCallback((HttpAsyncClientBuilder httpClientBuilder) -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
             log.info("conexion establecida");
         } catch (Exception e) {

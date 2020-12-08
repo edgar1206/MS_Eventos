@@ -1,22 +1,40 @@
 package mx.com.nmp.eventos.model.nr;
 
-public class NewRelic {
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.elasticsearch.annotations.Document;
 
-    private String idTicket;
+import java.util.Date;
+
+@TypeAlias("Incidencia")
+@Document(indexName = "indice-incidencia")
+public class LogIncidencia {
+
+    @Id
+    private String id;
+    private String idEvento;
     private String error;
     private String errorDescripcion;
     private String stackTrace;
     private String statusCodeError;
     private String severidad;
     private String torreResolucion;
-    private String horaOcurrencia;
+    private Date horaOcurrencia;
 
-    public String getIdTicket() {
-        return idTicket;
+    public String getId() {
+        return id;
     }
 
-    public void setIdTicket(String idTicket) {
-        this.idTicket = idTicket;
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getIdEvento() {
+        return idEvento;
+    }
+
+    public void setIdEvento(String idEvento) {
+        this.idEvento = idEvento;
     }
 
     public String getError() {
@@ -67,12 +85,11 @@ public class NewRelic {
         this.torreResolucion = torreResolucion;
     }
 
-    public String getHoraOcurrencia() {
+    public Date getHoraOcurrencia() {
         return horaOcurrencia;
     }
 
-    public void setHoraOcurrencia(String horaOcurrencia) {
+    public void setHoraOcurrencia(Date horaOcurrencia) {
         this.horaOcurrencia = horaOcurrencia;
     }
-
 }
