@@ -12,9 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 public class ServiceLogImplement implements ServiceLog {
+
+    private static final Logger LOGGER = Logger.getLogger(ServiceLogImplement.class.getName());
 
     @Autowired
     private RepositoryLog repositoryLog;
@@ -29,7 +32,13 @@ public class ServiceLogImplement implements ServiceLog {
     }
 
     @Override
+    public Iterable<LogDTO> getAllLogs() {
+        return repositoryLog.findAll();
+    }
+
+    @Override
     public LogDTO saveLog(LogDTO log) {
+        LOGGER.info("guarda evento en elastic");
         repositoryLog.save(log);
         return null;
     }

@@ -9,8 +9,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Logger;
+
 @Service
 public class ServiceIncidenciaImplement implements ServiceIncidencia {
+
+    private static final Logger LOGGER = Logger.getLogger(ServiceIncidenciaImplement.class.getName());
 
     @Autowired
     private RepositoryIncidencia repositoryIncidencia;
@@ -22,6 +26,7 @@ public class ServiceIncidenciaImplement implements ServiceIncidencia {
 
     @Override
     public LogIncidencia saveIncidencias(LogIncidencia incidencia) {
+        LOGGER.info("guarda evento en elastic");
         return repositoryIncidencia.save(incidencia);
     }
 

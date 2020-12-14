@@ -6,16 +6,16 @@ import mx.com.nmp.eventos.model.nr.LogIncidencia;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/nmp/monitoreo/v1")
 public class ControllerLog {
+
+    private static final Logger LOGGER = Logger.getLogger(ControllerLog.class.getName());
 
     @Autowired
     private ServiceLogImplement serviceLog;
@@ -28,12 +28,18 @@ public class ControllerLog {
 
     @PostMapping("/addLog")
     public ResponseEntity<?> agregaLog(@RequestBody LogDTO log){
+        LOGGER.info("recibe evento");
         try{
             serviceLog.saveLog(log);
             return ResponseEntity.ok().build();
         }catch (Exception e){
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/logs")
+    public ResponseEntity<?> getLogs(){
+        return ResponseEntity.ok(serviceLog.getAllLogs());
     }
 
 }

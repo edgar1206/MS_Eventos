@@ -23,12 +23,16 @@ public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient
 
     @Value("${elasticsearch.user}")
     String ELASTIC_USER;
+
     @Value("${elasticsearch.password}")
     String ELASTIC_IN;
+
     @Value("${elasticsearch.host}")
     private String ELASTIC_HOST;
+
     @Value("${elasticsearch.port}")
     private int ELASTIC_PORT;
+
     @Value("${elasticsearch.protocol}")
     private String ELASTIC_PROTOCOL;
 
