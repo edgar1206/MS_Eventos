@@ -6,6 +6,7 @@ import mx.com.nmp.eventos.dto.LogIndiceDTO;
 import mx.com.nmp.eventos.model.indicelogs.LogIndice;
 import mx.com.nmp.eventos.model.indicelogs.Message;
 import mx.com.nmp.eventos.model.logLevel.CountLevel;
+import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
 import mx.com.nmp.eventos.utils.MessageMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class ControllerLog {
     private ServiceLogImplement serviceLog;
 
     @PostMapping("/addLog")
-    public ResponseEntity<?> agregaLog(@RequestBody LogIndiceDTO evento){
+    public ResponseEntity<?> agregaLog(@RequestBody Evento evento){
         try{
             serviceLog.saveLog(evento);
             return ResponseEntity.ok().build();

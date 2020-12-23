@@ -7,6 +7,7 @@ import mx.com.nmp.eventos.dto.LogIndiceDTO;
 import mx.com.nmp.eventos.model.constant.Constants;
 import mx.com.nmp.eventos.model.indicelogs.LogIndice;
 import mx.com.nmp.eventos.model.logLevel.CountLevel;
+import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.utils.ElasticQuery;
 import mx.com.nmp.eventos.utils.MessageMapper;
@@ -146,12 +147,13 @@ public class ServiceLogImplement{
         }
     }
 
-    public void saveLog(LogIndiceDTO evento) {
+    public void saveLog(Evento evento) {
         try{
-            LogIndice indice = MessageMapper.eventToMessage(evento);
-            LogIndice logIndice = repositoryLog.save(indice);
+           // LogIndice indice = MessageMapper.eventToMessage(evento);
+            //LogIndice logIndice = repositoryLog.save(indice);
+            Evento eventoIndice = repositoryLog.save(evento);
             Gson gson = new Gson();
-            System.out.println("---------------------  " + gson.toJson(logIndice));
+            System.out.println("---------------------  " + gson.toJson(eventoIndice));
         }catch (Exception e){
             LOGGER.info( "Error: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
