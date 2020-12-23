@@ -31,7 +31,7 @@ public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient
     private String ELASTIC_HOST;
 
     @Value("${elasticsearch.port}")
-    private int ELASTIC_PORT;
+    private String ELASTIC_PORT;
 
     @Value("${elasticsearch.protocol}")
     private String ELASTIC_PROTOCOL;
@@ -56,7 +56,7 @@ public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(ELASTIC_USER, ELASTIC_IN));
         try {
-            restHighLevelClient = new RestHighLevelClient(RestClient.builder(new HttpHost(ELASTIC_HOST, ELASTIC_PORT, ELASTIC_PROTOCOL))
+            restHighLevelClient = new RestHighLevelClient(RestClient.builder(new HttpHost(ELASTIC_HOST, Integer.parseInt(ELASTIC_PORT), ELASTIC_PROTOCOL))
                     .setHttpClientConfigCallback((HttpAsyncClientBuilder httpClientBuilder) -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)));
             log.info("conexion establecida");
         } catch (Exception e) {

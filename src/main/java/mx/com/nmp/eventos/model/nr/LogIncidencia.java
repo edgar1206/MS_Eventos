@@ -1,16 +1,9 @@
 package mx.com.nmp.eventos.model.nr;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.elasticsearch.annotations.Document;
-
 import java.util.Date;
 
-@TypeAlias("Incidencia")
-@Document(indexName = "indice-incidencia")
 public class LogIncidencia {
 
-    @Id
     private String id;
     private String idEvento;
     private String error;
@@ -20,6 +13,7 @@ public class LogIncidencia {
     private String severidad;
     private String torreResolucion;
     private Date horaOcurrencia;
+    private String eventType;
 
     public String getId() {
         return id;
@@ -92,4 +86,13 @@ public class LogIncidencia {
     public void setHoraOcurrencia(Date horaOcurrencia) {
         this.horaOcurrencia = horaOcurrencia;
     }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
+
 }

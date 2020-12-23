@@ -1,19 +1,11 @@
-package mx.com.nmp.eventos.model.indicelogs;
+package mx.com.nmp.eventos.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.elasticsearch.annotations.Document;
+import mx.com.nmp.eventos.model.indicelogs.GeoIP;
 
 import java.util.Date;
 
-
-@TypeAlias("Log")
-@Document(indexName = "indice-evento")
-public class LogDTO {
-
-    @Id
-    private String id;
+public class LogIndiceDTO {
     @JsonProperty("message.idCliente")
     private String idCliente;
     @JsonProperty("message.idSesion")
@@ -22,7 +14,6 @@ public class LogDTO {
     @JsonProperty("message.descripcion")
     private String descripcion;
     private String pid;
-    @JsonProperty("message.nombreUsuario")
     private String nombreUsuario;
     @JsonProperty("geoip")
     private GeoIP geoIP;
@@ -40,18 +31,9 @@ public class LogDTO {
     @JsonProperty("@timestamp")
     private Date timeStamp;
     private String level;
-    @JsonProperty("message.fase")
     private String fase;
     @JsonProperty("message.estatus")
     private String estatus;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getIdCliente() {
         return idCliente;
@@ -173,10 +155,12 @@ public class LogDTO {
         this.level = level;
     }
 
+    @JsonProperty("message.fase")
     public String getFase() {
         return fase;
     }
 
+    @JsonProperty("message.fase")
     public void setFase(String fase) {
         this.fase = fase;
     }
@@ -188,5 +172,4 @@ public class LogDTO {
     public void setEstatus(String estatus) {
         this.estatus = estatus;
     }
-
 }

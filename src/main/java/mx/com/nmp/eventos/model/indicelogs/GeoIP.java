@@ -1,6 +1,5 @@
 package mx.com.nmp.eventos.model.indicelogs;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class GeoIP {
@@ -34,5 +33,4 @@ public class GeoIP {
     public void setLocation(Location location) {
         this.location = location;
     }
-
 }
