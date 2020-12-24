@@ -3,14 +3,11 @@ package mx.com.nmp.eventos.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import mx.com.nmp.eventos.dto.LogIndiceDTO;
 import mx.com.nmp.eventos.model.constant.Constants;
-import mx.com.nmp.eventos.model.indicelogs.LogIndice;
 import mx.com.nmp.eventos.model.logLevel.CountLevel;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.utils.ElasticQuery;
-import mx.com.nmp.eventos.utils.MessageMapper;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.search.SearchRequest;
@@ -50,9 +47,9 @@ public class ServiceLogImplement{
     @Autowired
     private RestHighLevelClient restHighLevelClient;
 
-    public List<LogIndice> getAllLogs() {
+    public List<Evento> getAllLogs() {
 
-        List<LogIndice> logs = new ArrayList<>();
+        List<Evento> eventos = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = ElasticQuery.getLogs(constants.getINDICE());
@@ -60,7 +57,7 @@ public class ServiceLogImplement{
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             String scrollId = searchResponse.getScrollId();
             SearchHit[] searchHits = searchResponse.getHits().getHits();
-            addLog(searchHits, logs);
+            addLog(searchHits, eventos);
 
             while (searchHits != null && searchHits.length > 1) {
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
@@ -68,7 +65,7 @@ public class ServiceLogImplement{
                 searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
-                addLog(searchHits, logs);
+                addLog(searchHits, eventos);
             }
 
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
@@ -85,7 +82,7 @@ public class ServiceLogImplement{
                 .collect(Collectors.toList());
         System.out.println(valoresUnicos);*/
 
-        return logs;
+        return eventos;
     }
 /*
     public List<LogIndice> getEventosPorLevel(String level){
@@ -160,13 +157,13 @@ public class ServiceLogImplement{
         }
     }
 
-    private void addLog(SearchHit[] results, List<LogIndice> logs) throws JsonProcessingException {
+    private void addLog(SearchHit[] results, List<Evento> eventos) throws JsonProcessingException {
         if (results != null && results.length > 0) {
             for(SearchHit result:results){
                 System.out.println();
                 System.out.println(result.getSourceAsString());
-                LogIndice log = new ObjectMapper().readValue(result.getSourceAsString(), LogIndice.class);
-                logs.add(log);
+                Evento evento = new ObjectMapper().readValue(result.getSourceAsString(), Evento.class);
+                eventos.add(evento);
             }
         }
     }

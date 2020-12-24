@@ -2,13 +2,9 @@ package mx.com.nmp.eventos.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import mx.com.nmp.eventos.dto.LogIndiceDTO;
-import mx.com.nmp.eventos.model.indicelogs.LogIndice;
-import mx.com.nmp.eventos.model.indicelogs.Message;
 import mx.com.nmp.eventos.model.logLevel.CountLevel;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
-import mx.com.nmp.eventos.utils.MessageMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

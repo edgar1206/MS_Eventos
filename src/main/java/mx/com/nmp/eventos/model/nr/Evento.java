@@ -1,10 +1,13 @@
 package mx.com.nmp.eventos.model.nr;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+
 import java.util.Date;
 
-
+@Document(indexName = "#{@environment.getProperty('index.elastic')}", type = "_doc")
 public class Evento {
-
+    @Id
     private String idEvent;
     private String eventType;
     private String eventLevel;
