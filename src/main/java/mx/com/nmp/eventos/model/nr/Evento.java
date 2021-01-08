@@ -7,6 +7,7 @@ import java.util.Date;
 
 @Document(indexName = "#{@environment.getProperty('index.elastic')}", type = "_doc")
 public class Evento {
+
     @Id
     private String idEvent;
     private String eventType;
@@ -17,6 +18,7 @@ public class Evento {
     private String severity;
     private String eventResource;
     private Date timeGenerated;
+    private String phase;
 
     public String getIdEvent() {
         return idEvent;
@@ -89,4 +91,13 @@ public class Evento {
     public void setTimeGenerated(Date timeGenerated) {
         this.timeGenerated = timeGenerated;
     }
+
+    public String getPhase() {
+        return phase;
+    }
+
+    public void setPhase(String phase) {
+        this.phase = phase;
+    }
+
 }

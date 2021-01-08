@@ -48,7 +48,6 @@ public class ServiceLogImplement{
     private RestHighLevelClient restHighLevelClient;
 
     public List<Evento> getAllLogs() {
-
         List<Evento> eventos = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
@@ -67,7 +66,6 @@ public class ServiceLogImplement{
                 searchHits = searchResponse.getHits().getHits();
                 addLog(searchHits, eventos);
             }
-
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("Error: " + ess.getMessage());
         }
@@ -146,11 +144,7 @@ public class ServiceLogImplement{
 
     public void saveLog(Evento evento) {
         try{
-           // LogIndice indice = MessageMapper.eventToMessage(evento);
-            //LogIndice logIndice = repositoryLog.save(indice);
             Evento eventoIndice = repositoryLog.save(evento);
-            Gson gson = new Gson();
-            System.out.println("---------------------  " + gson.toJson(eventoIndice));
         }catch (Exception e){
             LOGGER.info( "Error: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -160,8 +154,6 @@ public class ServiceLogImplement{
     private void addLog(SearchHit[] results, List<Evento> eventos) throws JsonProcessingException {
         if (results != null && results.length > 0) {
             for(SearchHit result:results){
-                System.out.println();
-                System.out.println(result.getSourceAsString());
                 Evento evento = new ObjectMapper().readValue(result.getSourceAsString(), Evento.class);
                 eventos.add(evento);
             }
