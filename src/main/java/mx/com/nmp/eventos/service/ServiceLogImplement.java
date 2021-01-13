@@ -79,12 +79,14 @@ public class ServiceLogImplement{
                 .distinct()
                 .collect(Collectors.toList());
         System.out.println(valoresUnicos);*/
-
+        if(eventos.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se encontraron eventos");
+        }
         return eventos;
     }
-/*
-    public List<LogIndice> getEventosPorLevel(String level){
-        List<LogIndice> logs = new ArrayList<>();
+
+    public List<Evento> getEventosPorLevel(String level){
+        List<Evento> logs = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = ElasticQuery.getLogsByLevel(level, constants.getINDICE());
@@ -100,8 +102,9 @@ public class ServiceLogImplement{
         return logs;
     }
 
-    public List<LogIndice> getEventosPorFechaLevel(String fecha, String level){
-        List<LogIndice> logs = new ArrayList<>();
+    public List<Evento> getEventosPorFechaLevel(String fecha, String level){
+        System.out.println("entra");
+        List<Evento> logs = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = ElasticQuery.getLogsByLevelAndDate(fecha, level, constants.getINDICE());
@@ -111,12 +114,13 @@ public class ServiceLogImplement{
             addLog(searchHits, logs);
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("ERROR: " + ess.getMessage());
+            ess.printStackTrace();
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
         if(logs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron eventos");
         return logs;
     }
-*/
+
     public CountLevel getCuentaTipoEventos(){
         CountLevel countLevel = new CountLevel();
         countLevel.setInfo(countEventosLevel("info"));

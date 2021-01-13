@@ -25,7 +25,7 @@ public class ElasticQuery {
     public static SearchRequest getLogsByLevel(String level, String index){
         SearchRequest searchRequest = new SearchRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(QueryBuilders.matchQuery("level",level));
+        sourceBuilder.query(QueryBuilders.matchQuery("eventLevel",level));
         sourceBuilder.from(0);
         sourceBuilder.size(4000);
         searchRequest.indices(index);
@@ -42,8 +42,8 @@ public class ElasticQuery {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         HashSet<String> valores = new HashSet<>();
         valores.add(level);
-        if(!level.isEmpty())boolQueryBuilder.must(QueryBuilders.termsQuery("level",valores));
-        boolQueryBuilder.filter(QueryBuilders.rangeQuery("startTime").gte(gte).lte(lte));
+        if(!level.isEmpty())boolQueryBuilder.must(QueryBuilders.termsQuery("eventLevel",valores));
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(gte).lte(lte));
         sourceBuilder.query(boolQueryBuilder);
         sourceBuilder.from(0);
         sourceBuilder.size(4000);

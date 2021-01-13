@@ -4,13 +4,16 @@ import mx.com.nmp.eventos.model.logLevel.CountLevel;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 @RestController
-@RequestMapping("/nmp/monitoreo/v1")
+@RequestMapping("/event/trace/v1")
 public class ControllerLog {
 
     private static final Logger LOGGER = Logger.getLogger(ControllerLog.class.getName());
@@ -30,25 +33,25 @@ public class ControllerLog {
     }
 
     @GetMapping("/logs")
-    public ResponseEntity<?> getLogs(){
-        return ResponseEntity.ok(serviceLog.getAllLogs());
+    public List<Evento> getLogs(){
+        return serviceLog.getAllLogs();
     }
-/*
+
     @GetMapping(value = "/level",params = "level")
-    public List<LogIndice> getEventosPorLevel(@RequestParam("level") String level){
-        List<LogIndice> respuesta = serviceLog.getEventosPorLevel(level);
+    public List<Evento> getEventosPorLevel(@RequestParam("level") String level){
+        List<Evento> respuesta = serviceLog.getEventosPorLevel(level);
         return respuesta;
     }
-*/
+
     @GetMapping(value = "/count")
     public CountLevel getEventosPorLevel(){
         return serviceLog.getCuentaTipoEventos();
     }
-/*
+
     @GetMapping(value = "/rate",params = {"fecha", "level"})
-    public List<LogIndice> getEventosErrorFecha(@RequestParam("fecha") String fecha, @RequestParam("level") String level){
-        List<LogIndice> eventos = serviceLog.getEventosPorFechaLevel(fecha, level);
+    public List<Evento> getEventosErrorFecha(@RequestParam("fecha") String fecha, @RequestParam("level") String level){
+        List<Evento> eventos = serviceLog.getEventosPorFechaLevel(fecha, level);
         return eventos;
     }
-*/
+
 }
