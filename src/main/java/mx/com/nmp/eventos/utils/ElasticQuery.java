@@ -6,9 +6,26 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.HashSet;
+import java.util.TimeZone;
 
 public class ElasticQuery {
+
+    public static SearchRequest getLastWeek(String index){
+        SearchRequest searchRequest = new SearchRequest();
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        LocalDate date = LocalDate.now();
+        LocalDate newDate = date.minusDays(7);
+        sourceBuilder.query(QueryBuilders.rangeQuery("timeGenerated").gte(newDate));
+        sourceBuilder.from(0);
+        sourceBuilder.size(10000);
+        searchRequest.indices(index);
+        searchRequest.source(sourceBuilder);
+        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+        return searchRequest;
+    }
 
     public static SearchRequest getLogs(String index){
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -35,8 +52,8 @@ public class ElasticQuery {
     }
 
     public static SearchRequest getLogsByLevelAndDate(String fecha, String level, String index){
-        String lte = fecha.concat("T23:59:59.999Z");
-        String gte = fecha.concat("T00:00:00.000Z");
+        String lte = fecha.concat("T23:59:59.999" + getUtc());
+        String gte = fecha.concat("T00:00:00.000" + getUtc());
         SearchRequest searchRequest = new SearchRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
@@ -51,6 +68,15 @@ public class ElasticQuery {
         searchRequest.source(sourceBuilder);
         searchRequest.scroll(TimeValue.timeValueMinutes(1L));
         return searchRequest;
+    }
+
+    private static String getUtc(){
+        TimeZone zone = TimeZone.getTimeZone("America/Mexico_City");
+        int horas =  zone.getOffset(Calendar.ZONE_OFFSET)/36000;
+        String zoneId = String.valueOf(horas);
+        zoneId = zoneId.replace("-","");
+        String utc = "-0";
+        return utc.concat(zoneId);
     }
 
 }

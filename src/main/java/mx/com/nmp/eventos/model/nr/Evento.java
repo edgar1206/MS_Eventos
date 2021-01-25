@@ -1,8 +1,12 @@
 package mx.com.nmp.eventos.model.nr;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Document(indexName = "#{@environment.getProperty('index.elastic')}", type = "_doc")
@@ -17,8 +21,9 @@ public class Evento {
     private String eventDescription;
     private String severity;
     private String eventResource;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ",timezone = "America/Mexico_City")
     private Date timeGenerated;
-    private String phase;
+    private String eventPhase;
 
     public String getIdEvent() {
         return idEvent;
@@ -92,12 +97,11 @@ public class Evento {
         this.timeGenerated = timeGenerated;
     }
 
-    public String getPhase() {
-        return phase;
+    public String getEventPhase() {
+        return eventPhase;
     }
 
-    public void setPhase(String phase) {
-        this.phase = phase;
+    public void setEventPhase(String eventPhase) {
+        this.eventPhase = eventPhase;
     }
-
 }

@@ -2,7 +2,6 @@ package mx.com.nmp.eventos.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import mx.com.nmp.eventos.model.constant.Constants;
 import mx.com.nmp.eventos.model.logLevel.CountLevel;
 import mx.com.nmp.eventos.model.nr.Evento;
@@ -103,7 +102,6 @@ public class ServiceLogImplement{
     }
 
     public List<Evento> getEventosPorFechaLevel(String fecha, String level){
-        System.out.println("entra");
         List<Evento> logs = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
@@ -118,6 +116,35 @@ public class ServiceLogImplement{
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
         if(logs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron eventos");
+        LOGGER.info("Se encontraron " + logs.size() + " elementos");
+        return logs;
+    }
+
+    public List<Evento> getEventosUltimosSieteDias(){
+        List<Evento> logs = new ArrayList<>();
+        try {
+            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            SearchRequest searchRequest = ElasticQuery.getLastWeek(constants.getINDICE());
+            searchRequest.scroll(scroll);
+            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+            String scrollId = searchResponse.getScrollId();
+            addLog(searchHits, logs);
+            while (searchHits != null && searchHits.length > 1) {
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+                addLog(searchHits, logs);
+            }
+        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
+            LOGGER.info("ERROR: " + ess.getMessage());
+            ess.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
+        }
+        if(logs.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron eventos");
+        LOGGER.info("Se encontraron " + logs.size() + " elementos");
         return logs;
     }
 
@@ -148,7 +175,7 @@ public class ServiceLogImplement{
 
     public void saveLog(Evento evento) {
         try{
-            Evento eventoIndice = repositoryLog.save(evento);
+            repositoryLog.save(evento);
         }catch (Exception e){
             LOGGER.info( "Error: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());

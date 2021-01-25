@@ -4,10 +4,8 @@ import mx.com.nmp.eventos.model.logLevel.CountLevel;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -52,6 +50,11 @@ public class ControllerLog {
     public List<Evento> getEventosErrorFecha(@RequestParam("fecha") String fecha, @RequestParam("level") String level){
         List<Evento> eventos = serviceLog.getEventosPorFechaLevel(fecha, level);
         return eventos;
+    }
+
+    @GetMapping("/logsLastWeek")
+    public List<Evento> logsLastWeek(){
+        return serviceLog.getEventosUltimosSieteDias();
     }
 
 }
