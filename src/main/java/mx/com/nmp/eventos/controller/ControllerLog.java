@@ -1,7 +1,7 @@
 package mx.com.nmp.eventos.controller;
 
-import mx.com.nmp.eventos.model.logLevel.CountLevel;
 import mx.com.nmp.eventos.model.nr.Evento;
+import mx.com.nmp.eventos.model.response.DashBoard;
 import mx.com.nmp.eventos.service.ServiceLogImplement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -35,26 +35,17 @@ public class ControllerLog {
         return serviceLog.getAllLogs();
     }
 
-    @GetMapping(value = "/level",params = "level")
-    public List<Evento> getEventosPorLevel(@RequestParam("level") String level){
-        List<Evento> respuesta = serviceLog.getEventosPorLevel(level);
-        return respuesta;
+    //////----------
+
+    @GetMapping("/dashboard")
+    public List<DashBoard> getDashboard(){
+        return serviceLog.getDashboard();
     }
 
-    @GetMapping(value = "/count")
-    public CountLevel getEventosPorLevel(){
-        return serviceLog.getCuentaTipoEventos();
-    }
 
-    @GetMapping(value = "/rate",params = {"fecha", "level"})
-    public List<Evento> getEventosErrorFecha(@RequestParam("fecha") String fecha, @RequestParam("level") String level){
-        List<Evento> eventos = serviceLog.getEventosPorFechaLevel(fecha, level);
-        return eventos;
-    }
-
-    @GetMapping("/logsLastWeek")
-    public List<Evento> logsLastWeek(){
-        return serviceLog.getEventosUltimosSieteDias();
+    @GetMapping(value = "/third_level",params = "fase")
+    public List<DashBoard> getThirdLevel(@RequestParam("fase")String fase){
+        return serviceLog.getThirdLevel(fase);
     }
 
 }
