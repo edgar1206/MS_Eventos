@@ -3,10 +3,6 @@ package mx.com.nmp.eventos.model.nr;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Date;
 
 @Document(indexName = "#{@environment.getProperty('index.elastic')}", type = "_doc")

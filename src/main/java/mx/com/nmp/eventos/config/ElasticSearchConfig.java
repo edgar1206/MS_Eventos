@@ -24,17 +24,17 @@ public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient
     @Value("${elasticsearch.user}")
     String ELASTIC_USER;
 
-    @Value("${elasticsearch.password}")
+    @Value("${elasticsearch.sct}")
     String ELASTIC_IN;
 
     @Value("${elasticsearch.host}")
-    private String ELASTIC_HOST;
+    String ELASTIC_HOST;
 
     @Value("${elasticsearch.port}")
-    private String ELASTIC_PORT;
+    String ELASTIC_PORT;
 
     @Value("${elasticsearch.protocol}")
-    private String ELASTIC_PROTOCOL;
+    String ELASTIC_PROTOCOL;
 
     @Override
     public Class<RestHighLevelClient> getObjectType() {
@@ -42,7 +42,7 @@ public class ElasticSearchConfig extends AbstractFactoryBean<RestHighLevelClient
     }
 
     @Override
-    protected RestHighLevelClient createInstance() throws Exception {
+    protected RestHighLevelClient createInstance(){
         return buildClient();
     }
 

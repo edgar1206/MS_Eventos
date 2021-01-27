@@ -1,0 +1,17 @@
+---
+applications:
+- name: dev1775-ms-eventos
+  buildpack: https://github.com/cloudfoundry/java-buildpack.git
+  memory: 1G
+  timeout: 180
+  path: target/MS-Folios-0.0.1-SNAPSHOT.war
+  env:
+    TZ: America/Mexico_City
+    ELASTICSEARCH_HOST: 417aa3f7200b4e4ab27e35032757cadd.us-east-1.aws.found.io
+    ELASTICSEARCH_PROTOCOL: https
+    ELASTICSEARCH_PORT: 9243
+    ELASTICSEARCH_USER: cprocopio@montepiedad.com.mx
+    ELASTICSEARCH_SCT: Nmp+2406$
+    ELASTICSEARCH_INDEX: smnr_mimonte_eventos
+    ERROR_INCLUDE_MESSAGE: always
+    TIME_ZONE: America/Mexico_City

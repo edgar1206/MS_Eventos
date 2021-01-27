@@ -2,37 +2,31 @@ package mx.com.nmp.eventos.controller;
 
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.DashBoard;
-import mx.com.nmp.eventos.service.ServiceLogImplement;
+import mx.com.nmp.eventos.model.response.SecondLevel;
+import mx.com.nmp.eventos.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/event/trace/v1")
-public class ControllerLog {
-
-    private static final Logger LOGGER = Logger.getLogger(ControllerLog.class.getName());
+public class EventController {
 
     @Autowired
-    private ServiceLogImplement serviceLog;
+    private EventService serviceLog;
 
-    @PostMapping("/addLog")
-    public ResponseEntity<?> agregaLog(@RequestBody Evento evento){
+    @PostMapping("/event")
+    public ResponseEntity<?> addEvent(@RequestBody Evento evento){
         try{
-            serviceLog.saveLog(evento);
+            serviceLog.addEvent(evento);
             return ResponseEntity.ok().build();
         }catch (Exception e){
-            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
-    }
-
-    @GetMapping("/logs")
-    public List<Evento> getLogs(){
-        return serviceLog.getAllLogs();
     }
 
     //////----------
@@ -42,9 +36,15 @@ public class ControllerLog {
         return serviceLog.getDashboard();
     }
 
+    @GetMapping(value = "/second_level",params = "action")
+    public SecondLevel getSecondLevel(@RequestParam("action")String action){
+        if(action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio");
+        return serviceLog.getSecondLevel(action);
+    }
 
     @GetMapping(value = "/third_level",params = "fase")
     public List<DashBoard> getThirdLevel(@RequestParam("fase")String fase){
+        if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio");
         return serviceLog.getThirdLevel(fase);
     }
 

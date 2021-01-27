@@ -5,12 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import mx.com.nmp.eventos.model.constant.*;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.DashBoard;
+import mx.com.nmp.eventos.model.response.SecondLevel;
+import mx.com.nmp.eventos.model.response.Table;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.utils.ElasticQuery;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
@@ -26,22 +29,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.*;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
-public class ServiceLogImplement{
+public class EventService {
 
-    private static final Logger LOGGER = Logger.getLogger(ServiceLogImplement.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EventService.class.getName());
 
     @Autowired
     private RepositoryLog repositoryLog;
-
-    @Autowired
-    private Constants constants;
 
     @Autowired
     private RestHighLevelClient restHighLevelClient;
@@ -166,14 +164,101 @@ public class ServiceLogImplement{
         return boards;
     }
 
-    /////
-
     ///  Segundo Nivel
 
+    public SecondLevel getSecondLevel(String action){
+        SecondLevel secondLevel = new SecondLevel();
+        secondLevel.setTable(getTable(action));
+        secondLevel.setChart(getChart(action));
+        return secondLevel;
+    }
 
+    private List<Table> getTable(String action){
+        List<Evento> eventos = new ArrayList<>();
+        try {
+            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            SearchRequest searchRequest = ElasticQuery.getByActionWeek(action,Constants.getINDICE());
+            searchRequest.scroll(scroll);
+            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+            addLog(searchHits, eventos);
+            while (searchHits != null && searchHits.length > 1) {
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+                addLog(searchHits, eventos);
+            }
+        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
+            LOGGER.info("Error: " + ess.getMessage());
+        }
+        LOGGER.info("Se encontraron " + eventos.size() + " eventos");
+        final Map<String, Map<String, Map<String, Long>>> result = eventos.stream()
+                .collect(Collectors.groupingBy(Evento::getEventPhase,
+                         Collectors.groupingBy(Evento::getEventResource,
+                         Collectors.groupingBy(Evento::getEventLevel,
+                         Collectors.counting()))));
 
+        List<Table> lista = new ArrayList<>();
 
-    ///
+        result.forEach((fase, mapRecurso) -> {
+            mapRecurso.forEach((recurso, mapLevel) -> {
+                Table table = new Table();
+                table.setFase(fase);
+                table.setRecurso(recurso);
+                mapLevel.forEach((level, count) -> {
+                    level = level.toUpperCase();
+                    switch (level){
+                        case Nivel.INFO:
+                            table.setInfo(count);
+                            break;
+                        case Nivel.ERROR:
+                            table.setError(count);
+                            break;
+                        case Nivel.DEBUG:
+                            table.setDebug(count);
+                            break;
+                        case Nivel.TRACE:
+                            table.setTrace(count);
+                            break;
+                        case Nivel.FATAL:
+                            table.setFatal(count);
+                            break;
+                    }
+                });
+                lista.add(table);
+            });
+        });
+        if(lista.isEmpty()){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron eventos");
+        }
+        return lista;
+    }
+
+    private DashBoard getChart(String action){
+        DashBoard chart = new DashBoard();
+        Long[][] data = new Long[5][7];
+        List<String> events = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        long total = 0;
+        for (int i = 0; i < 5; i ++){
+            events.add(Nivel.name[i]);
+            for(int j = 0; j < 7 ; j ++){
+                data[i][j] = countByActionLevelDay(j,action,Nivel.name[i]);
+                total += data[i][j];
+            }
+        }
+        for(int d = 0; d < 7 ; d ++){
+            labels.add(getDayOfWeek(String.valueOf(d)));
+        }
+        chart.setData(data);
+        chart.setLabels(labels);
+        chart.setEvents(events);
+        chart.setTotal(total);
+        return chart;
+    }
 
     ///  Tercer Nivel
 
@@ -229,78 +314,25 @@ public class ServiceLogImplement{
         boards.add(eventWeek);
         return boards;
     }
-    ///
-
-    public List<Evento> getAllLogs() {
-        List<Evento> eventos = new ArrayList<>();
-        try {
-            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getLogs(constants.getINDICE());
-            searchRequest.scroll(scroll);
-            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            String scrollId = searchResponse.getScrollId();
-            SearchHit[] searchHits = searchResponse.getHits().getHits();
-            addLog(searchHits, eventos);
-/*
-            while (searchHits != null && searchHits.length > 1) {
-                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-                scrollRequest.scroll(scroll);
-                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
-                scrollId = searchResponse.getScrollId();
-                searchHits = searchResponse.getHits().getHits();
-                addLog(searchHits, eventos);
-            }*/
-        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
-            LOGGER.info("Error: " + ess.getMessage());
-        }
-
-        /*List<String> estatus = new ArrayList<String>();
-        logs.forEach(logIndice -> {
-            estatus.add(logIndice.getLevel());
-        });
-        List<String> valoresUnicos = estatus
-                .stream()
-                .distinct()
-                .collect(Collectors.toList());
-        System.out.println(valoresUnicos);*/
-        if(eventos.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se encontraron eventos");
-        }
-        return eventos;
-    }
-
-/*
-    public EventYear getCuentaEventosPorMes(String year){
-        EventMonth mes = new EventMonth();
-        EventYear eventYear = new EventYear();
-        mes.setEnero(countEventoMes(Mes.ENERO,year));
-        mes.setFebrero(countEventoMes(Mes.FEBRERO,year));
-        mes.setMarzo(countEventoMes(Mes.MARZO,year));
-        mes.setAbril(countEventoMes(Mes.ABRIL,year));
-        mes.setMayo(countEventoMes(Mes.MAYO,year));
-        mes.setJunio(countEventoMes(Mes.JUNIO,year));
-        mes.setJulio(countEventoMes(Mes.JULIO,year));
-        mes.setAgosto(countEventoMes(Mes.AGOSTO,year));
-        mes.setSeptiembre(countEventoMes(Mes.SEPTIEMBRE,year));
-        mes.setOctubre(countEventoMes(Mes.OCTUBRE,year));
-        mes.setNoviembre(countEventoMes(Mes.NOVIEMBRE,year));
-        mes.setDiciembre(countEventoMes(Mes.DICIEMBRE,year));
-        long total = mes.getEnero() + mes.getFebrero() + mes.getMarzo() + mes.getAbril() + mes.getMayo()
-                + mes.getJunio() + mes.getJulio() + mes.getAgosto() + mes.getAgosto() + mes.getSeptiembre()
-                + mes.getOctubre() + mes.getNoviembre() + mes.getDiciembre();
-        eventYear.setAnio(year);
-        eventYear.setMes(mes);
-        eventYear.setTotalEventos(total);
-        return eventYear;
-    }
-*/
 
 //////////-----
 
     @Async
+    private long countByActionLevelDay(int dia, String action, String level){
+        try {
+            CountRequest countRequest = ElasticQuery.getByActionLevelDay(dia , action, level, Constants.getINDICE());
+            CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
+            return countResponse.getCount();
+        } catch (IOException e) {
+            LOGGER.info("Error: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @Async
     private long countByDayPhaseLevel(int dia, String level, String phase){
         try {
-            CountRequest countRequest = ElasticQuery.getByNameDay(String.valueOf(dia) , level, phase , constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByNameDay(String.valueOf(dia) , level, phase , Constants.getINDICE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -313,7 +345,7 @@ public class ServiceLogImplement{
     public long countByNameDay(String dia, List<String> labels, String level, String phase){
         labels.add(getNameDayOfWeek(dia));
         try {
-            CountRequest countRequest = ElasticQuery.getByNameDay(dia,level,phase,constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByNameDay(dia,level,phase,Constants.getINDICE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -326,7 +358,7 @@ public class ServiceLogImplement{
     public long countByDay(String dia, List<String> labels){
         labels.add(getDayOfWeek(dia));
         try {
-            CountRequest countRequest = ElasticQuery.getByDay(dia,constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByDay(dia,Constants.getINDICE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -339,7 +371,7 @@ public class ServiceLogImplement{
     public long countByWeek(String week, List<String> labels){
         labels.add(getWeekOfMonth(week));
         try {
-            CountRequest countRequest = ElasticQuery.getByWeek(week,constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByWeek(week,Constants.getINDICE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -352,7 +384,7 @@ public class ServiceLogImplement{
     private long countEventActionLastDay(String field, String value, List<String> evento){
         evento.add(value);
         try {
-            CountRequest countRequest = ElasticQuery.getActionLevelLastDay(field ,value , constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getActionLevelLastDay(field ,value , Constants.getINDICE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -364,7 +396,7 @@ public class ServiceLogImplement{
     @Async
     private long countActionByMonth(String accion, int mes){
         try {
-            CountRequest countRequest = ElasticQuery.getByMonth(accion , mes , constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByMonth(accion , mes , Constants.getINDICE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -373,9 +405,9 @@ public class ServiceLogImplement{
         }
     }
 
-    //-*------
+    //---------
 
-    public void saveLog(Evento evento) {
+    public void addEvent(Evento evento) {
         try{
             repositoryLog.save(evento);
         }catch (Exception e){
@@ -416,7 +448,7 @@ public class ServiceLogImplement{
     }
 
     public void setMonth(List<String> labels, int m){
-        Calendar ca1 = Calendar.getInstance(TimeZone.getTimeZone("America/Mexico_City"));
+        Calendar ca1 = Calendar.getInstance(TimeZone.getTimeZone(Constants.getTIME_ZONE()));
         ca1.add(Calendar.MONTH,- m);
         ca1.setMinimalDaysInFirstWeek(1);
         int mes = ca1.get(Calendar.MONTH);

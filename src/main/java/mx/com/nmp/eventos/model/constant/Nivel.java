@@ -8,6 +8,12 @@ public class Nivel {
     public static final String fatal = "Fatal";
     public static final String trace = "Trace";
 
+    public static final String INFO = "INFO";
+    public static final String ERROR = "ERROR";
+    public static final String DEBUG = "DEBUG";
+    public static final String FATAL = "FATAL";
+    public static final String TRACE = "TRACE";
+
     public static final String[] name = {"Info", "Error", "Debug", "Fatal", "Trace"};
 
 }

@@ -1,5 +1,6 @@
 package mx.com.nmp.eventos.utils;
 
+import mx.com.nmp.eventos.model.constant.Constants;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.common.unit.TimeValue;
@@ -11,6 +12,24 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 public class ElasticQuery {
+
+    public static SearchRequest getByActionWeek(String action, String index){
+        SearchRequest searchRequest = new SearchRequest();
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.matchQuery("eventAction",action));
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
+                .gte("now-" + 6 + "d/d")
+                .lte("now-" + 0 + "d/d")
+                .timeZone(getUtc()));
+        sourceBuilder.query(boolQueryBuilder);
+        sourceBuilder.from(0);
+        sourceBuilder.size(10000);
+        searchRequest.source(sourceBuilder);
+        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+        searchRequest.indices(index);
+        return searchRequest;
+    }
 
     public static CountRequest getActionLevelLastDay(String field ,String value, String index){
         CountRequest countRequest = new CountRequest();
@@ -79,22 +98,24 @@ public class ElasticQuery {
         return countRequest;
     }
 
-/////
-
-    public static SearchRequest getLogs(String index){
+    public static CountRequest getByActionLevelDay(int dia, String action, String level, String index){
+        CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(QueryBuilders.matchAllQuery());
-        sourceBuilder.from(0);
-        sourceBuilder.size(100);
-        SearchRequest searchRequest = new SearchRequest();
-        searchRequest.indices(index);
-        searchRequest.source(sourceBuilder);
-        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
-        return searchRequest;
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.matchQuery("eventAction", action));
+        boolQueryBuilder.must(QueryBuilders.matchQuery("eventLevel", level));
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
+                .gte("now-" + dia + "d/d")
+                .lte("now-" + dia + "d/d")
+                .timeZone(getUtc()));
+        sourceBuilder.query(boolQueryBuilder);
+        countRequest.source(sourceBuilder);
+        countRequest.indices(index);
+        return countRequest;
     }
 
     public static String getUtc(){
-        TimeZone zone = TimeZone.getTimeZone("America/Mexico_City");
+        TimeZone zone = TimeZone.getTimeZone(Constants.getTIME_ZONE());
         int horas =  zone.getOffset(Calendar.ZONE_OFFSET)/36000;
         String zoneId = String.valueOf(horas);
         zoneId = zoneId.replace("-","");
