@@ -4,7 +4,7 @@ applications:
   buildpack: https://github.com/cloudfoundry/java-buildpack.git
   memory: 1G
   timeout: 180
-  path: target/eventos-0.0.1-SNAPSHOT.war
+  path: target/eventos-0.0.1-SNAPSHOT.jar
   env:
     TZ: America/Mexico_City
     ELASTICSEARCH_HOST: 417aa3f7200b4e4ab27e35032757cadd.us-east-1.aws.found.io
