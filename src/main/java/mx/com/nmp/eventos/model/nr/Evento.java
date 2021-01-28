@@ -20,6 +20,9 @@ public class Evento {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ",timezone = "America/Mexico_City")
     private Date timeGenerated;
     private String eventPhase;
+    private String resolutionTower;
+    private String applicationName;
+    private String configurationElement;
 
     public String getIdEvent() {
         return idEvent;
@@ -100,4 +103,29 @@ public class Evento {
     public void setEventPhase(String eventPhase) {
         this.eventPhase = eventPhase;
     }
+
+    public String getResolutionTower() {
+        return resolutionTower;
+    }
+
+    public void setResolutionTower(String resolutionTower) {
+        this.resolutionTower = resolutionTower;
+    }
+
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public void setApplicationName(String applicationName) {
+        this.applicationName = applicationName;
+    }
+
+    public String getConfigurationElement() {
+        return configurationElement;
+    }
+
+    public void setConfigurationElement(String configurationElement) {
+        this.configurationElement = configurationElement;
+    }
+
 }
