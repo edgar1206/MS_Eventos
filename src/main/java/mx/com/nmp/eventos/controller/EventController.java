@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "*", methods = {RequestMethod.GET})
 @RequestMapping("/event/trace/v1")
 public class EventController {
 
