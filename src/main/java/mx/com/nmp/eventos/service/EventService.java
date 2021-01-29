@@ -44,6 +44,9 @@ public class EventService {
     @Autowired
     private RestHighLevelClient restHighLevelClient;
 
+    @Autowired
+    private Constants constants;
+
     //// Dashboard
 
     public List<DashBoard> getDashboard(){
@@ -174,65 +177,16 @@ public class EventService {
     }
 
     private List<Table> getTable(String action){
-        List<Evento> eventos = new ArrayList<>();
-        try {
-            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getByActionWeek(action,Constants.getINDICE());
-            searchRequest.scroll(scroll);
-            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            String scrollId = searchResponse.getScrollId();
-            SearchHit[] searchHits = searchResponse.getHits().getHits();
-            addLog(searchHits, eventos);
-            while (searchHits != null && searchHits.length > 1) {
-                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-                scrollRequest.scroll(scroll);
-                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
-                scrollId = searchResponse.getScrollId();
-                searchHits = searchResponse.getHits().getHits();
-                addLog(searchHits, eventos);
-            }
-        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
-            LOGGER.info("Error: " + ess.getMessage());
-        }
-        LOGGER.info("Se encontraron " + eventos.size() + " eventos");
-        final Map<String, Map<String, Map<String, Long>>> result = eventos.stream()
-                .collect(Collectors.groupingBy(Evento::getEventPhase,
-                         Collectors.groupingBy(Evento::getEventResource,
-                         Collectors.groupingBy(Evento::getEventLevel,
-                         Collectors.counting()))));
-
         List<Table> lista = new ArrayList<>();
-
-        result.forEach((fase, mapRecurso) -> {
-            mapRecurso.forEach((recurso, mapLevel) -> {
-                Table table = new Table();
-                table.setFase(fase);
-                table.setRecurso(recurso);
-                mapLevel.forEach((level, count) -> {
-                    level = level.toUpperCase();
-                    switch (level){
-                        case Nivel.INFO:
-                            table.setInfo(count);
-                            break;
-                        case Nivel.ERROR:
-                            table.setError(count);
-                            break;
-                        case Nivel.DEBUG:
-                            table.setDebug(count);
-                            break;
-                        case Nivel.TRACE:
-                            table.setTrace(count);
-                            break;
-                        case Nivel.FATAL:
-                            table.setFatal(count);
-                            break;
-                    }
-                });
-                lista.add(table);
-            });
-        });
-        if(lista.isEmpty()){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontraron eventos");
+        String[] phase = new String[0]; int tam = 0;
+        for(int i = 0; i < Accion.name.length; i++){
+            if(Accion.name[i].equalsIgnoreCase(action)){
+                phase = Accion.fases[i];
+                tam = phase.length;
+            }
+        }
+        for(int i = 0; i < tam; i++){
+            lista.add(getPhaseByAction(action, phase[i]));
         }
         return lista;
     }
@@ -318,9 +272,67 @@ public class EventService {
 //////////-----
 
     @Async
+    private Table getPhaseByAction(String action,String phase){
+        List<Evento> eventos = new ArrayList<>();
+        try {
+            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            SearchRequest searchRequest = ElasticQuery.getByActionWeek(action,phase,constants.getINDICE(),constants.getTIME_ZONE());
+            searchRequest.scroll(scroll);
+            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+            addLog(searchHits, eventos);
+            while (searchHits != null && searchHits.length > 1) {
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+                addLog(searchHits, eventos);
+            }
+        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
+            LOGGER.info("Error: " + ess.getMessage());
+        }
+        final Map<String, Map<String, Map<String, Long>>> result = eventos.stream()
+                .collect(Collectors.groupingBy(Evento::getEventPhase,
+                        Collectors.groupingBy(Evento::getEventResource,
+                                Collectors.groupingBy(Evento::getEventLevel,
+                                        Collectors.counting()))));
+
+        Table table = new Table();
+        table.setFase(phase);
+        result.forEach((fase, mapRecurso) -> {
+            mapRecurso.forEach((recurso, mapLevel) -> {
+                table.setRecurso(recurso);
+                mapLevel.forEach((level, count) -> {
+                    level = level.toUpperCase();
+                    switch (level){
+                        case Nivel.INFO:
+                            table.setInfo(count);
+                            break;
+                        case Nivel.ERROR:
+                            table.setError(count);
+                            break;
+                        case Nivel.DEBUG:
+                            table.setDebug(count);
+                            break;
+                        case Nivel.TRACE:
+                            table.setTrace(count);
+                            break;
+                        case Nivel.FATAL:
+                            table.setFatal(count);
+                            break;
+                    }
+                });
+            });
+        });
+        return table;
+    }
+
+    @Async
     private long countByActionLevelDay(int dia, String action, String level){
         try {
-            CountRequest countRequest = ElasticQuery.getByActionLevelDay(dia , action, level, Constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByActionLevelDay(dia , action, level, constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -332,7 +344,7 @@ public class EventService {
     @Async
     private long countByDayPhaseLevel(int dia, String level, String phase){
         try {
-            CountRequest countRequest = ElasticQuery.getByNameDay(String.valueOf(dia) , level, phase , Constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByNameDay(String.valueOf(dia) , level, phase , constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -345,7 +357,7 @@ public class EventService {
     public long countByNameDay(String dia, List<String> labels, String level, String phase){
         labels.add(getNameDayOfWeek(dia));
         try {
-            CountRequest countRequest = ElasticQuery.getByNameDay(dia,level,phase,Constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByNameDay(dia,level,phase,constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -358,7 +370,7 @@ public class EventService {
     public long countByDay(String dia, List<String> labels){
         labels.add(getDayOfWeek(dia));
         try {
-            CountRequest countRequest = ElasticQuery.getByDay(dia,Constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByDay(dia,constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -371,7 +383,7 @@ public class EventService {
     public long countByWeek(String week, List<String> labels){
         labels.add(getWeekOfMonth(week));
         try {
-            CountRequest countRequest = ElasticQuery.getByWeek(week,Constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByWeek(week,constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -384,7 +396,7 @@ public class EventService {
     private long countEventActionLastDay(String field, String value, List<String> evento){
         evento.add(value);
         try {
-            CountRequest countRequest = ElasticQuery.getActionLevelLastDay(field ,value , Constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getActionLevelLastDay(field ,value ,constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -396,7 +408,7 @@ public class EventService {
     @Async
     private long countActionByMonth(String accion, int mes){
         try {
-            CountRequest countRequest = ElasticQuery.getByMonth(accion , mes , Constants.getINDICE());
+            CountRequest countRequest = ElasticQuery.getByMonth(accion , mes , constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -427,7 +439,7 @@ public class EventService {
 
     private String getDayOfWeek(String dia){
         LocalDateTime now = LocalDateTime.now();
-        ZonedDateTime zt = now.atZone(ZoneId.of(ElasticQuery.getUtc()));
+        ZonedDateTime zt = now.atZone(ZoneId.of(ElasticQuery.getUtc(constants.getTIME_ZONE())));
         LocalDate date = zt.toLocalDate();
         date = date.minusDays(Integer.parseInt(dia));
         DayOfWeek day = date.getDayOfWeek();
@@ -436,7 +448,7 @@ public class EventService {
 
     private String getNameDayOfWeek(String dia){
         LocalDateTime now = LocalDateTime.now();
-        ZonedDateTime zt = now.atZone(ZoneId.of(ElasticQuery.getUtc()));
+        ZonedDateTime zt = now.atZone(ZoneId.of(ElasticQuery.getUtc(constants.getTIME_ZONE())));
         LocalDate date = zt.toLocalDate();
         date = date.minusDays(Integer.parseInt(dia));
         DayOfWeek day = date.getDayOfWeek();
@@ -448,7 +460,7 @@ public class EventService {
     }
 
     public void setMonth(List<String> labels, int m){
-        Calendar ca1 = Calendar.getInstance(TimeZone.getTimeZone(Constants.getTIME_ZONE()));
+        Calendar ca1 = Calendar.getInstance(TimeZone.getTimeZone(constants.getTIME_ZONE()));
         ca1.add(Calendar.MONTH,- m);
         ca1.setMinimalDaysInFirstWeek(1);
         int mes = ca1.get(Calendar.MONTH);

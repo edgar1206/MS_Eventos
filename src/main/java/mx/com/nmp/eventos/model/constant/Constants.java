@@ -6,23 +6,23 @@ import org.springframework.stereotype.Component;
 @Component
 public class Constants {
 
-    private static String INDICE;
-    private static String TIME_ZONE;
+    private String INDICE;
+    private String TIME_ZONE;
 
     public Constants(@Value("${index.elastic}") String INDICE,
                      @Value("${time.zone}") String TIME_ZONE)
     {
 
-        Constants.INDICE = INDICE;
-        Constants.TIME_ZONE = TIME_ZONE;
+        this.INDICE = INDICE;
+        this.TIME_ZONE = TIME_ZONE;
 
     }
 
-    public static String getINDICE() {
+    public String getINDICE() {
         return INDICE;
     }
 
-    public static String getTIME_ZONE() {
+    public String getTIME_ZONE() {
         return TIME_ZONE;
     }
 
