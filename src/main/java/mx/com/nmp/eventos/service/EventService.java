@@ -47,6 +47,10 @@ public class EventService {
     @Autowired
     private Constants constants;
 
+    public void setRestHighLevelClient(RestHighLevelClient restHighLevelClient) {
+        this.restHighLevelClient = restHighLevelClient;
+    }
+
     //// Dashboard
 
     public List<DashBoard> getDashboard(){
