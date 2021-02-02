@@ -17,7 +17,7 @@ public class ElasticQuery {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchQuery("eventAction",action));
-        boolQueryBuilder.must(QueryBuilders.matchQuery("fase",fase));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",fase));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + 6 + "d/d")
                 .lte("now-" + 0 + "d/d")

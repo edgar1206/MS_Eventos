@@ -271,7 +271,7 @@ public class EventService {
 
 //////////-----
 
-    @Async
+    //@Async
     private Table getPhaseByAction(String action,String phase){
         List<Evento> eventos = new ArrayList<>();
         try {
@@ -299,12 +299,14 @@ public class EventService {
                                 Collectors.groupingBy(Evento::getEventLevel,
                                         Collectors.counting()))));
 
+        if(eventos.size() > 0)System.out.println(eventos.get(0).getEventAction() + "  " + eventos.get(0).getEventPhase());
         Table table = new Table();
         table.setFase(phase);
         result.forEach((fase, mapRecurso) -> {
             mapRecurso.forEach((recurso, mapLevel) -> {
                 table.setRecurso(recurso);
                 mapLevel.forEach((level, count) -> {
+                    System.out.println(String.join(fase, recurso , level + "  " + count));
                     level = level.toUpperCase();
                     switch (level){
                         case Nivel.INFO:
