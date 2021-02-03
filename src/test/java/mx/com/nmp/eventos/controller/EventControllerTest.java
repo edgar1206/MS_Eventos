@@ -35,6 +35,7 @@ class EventControllerTest {
     @Test
     void getDashboard() {
         Assertions.assertNotNull(eventController.getDashboard());
+
     }
 
     @Test
@@ -47,5 +48,6 @@ class EventControllerTest {
     @Test
     void getThirdLevel() {
         Assertions.assertNotNull(eventController.getThirdLevel("Autenticar"));
+
     }
 }
