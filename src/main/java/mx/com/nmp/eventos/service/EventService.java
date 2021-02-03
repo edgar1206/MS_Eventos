@@ -23,6 +23,7 @@ import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -473,10 +474,11 @@ public class EventService {
 
     //-------------------------------
 
-    //@Bean
+    @Bean
     public void cuentaTodo(){
         List<Evento> eventos = new ArrayList<>();
-        try {
+        System.out.println(Accion.recursos[Accion.recurso[0][1][0]]);
+        /*try {
             SearchRequest searchRequest = new SearchRequest();
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
@@ -529,7 +531,7 @@ public class EventService {
                 .stream()
                 .distinct()
                 .collect(Collectors.toList());
-
+*/
 
     }
 
