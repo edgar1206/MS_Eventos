@@ -16,19 +16,16 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.elasticsearch.client.core.CountRequest;
-import org.elasticsearch.client.core.CountResponse;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
@@ -187,11 +184,19 @@ public class EventService {
             if(Accion.name[i].equalsIgnoreCase(action)){
                 phase = Accion.fases[i];
                 tam = phase.length;
+                for(int j =0; j< Accion.fases[i].length;j++){
+                    for(int k=0; k<Accion.recurso[i][j].length;k++){
+                        Table table = new Table();
+                        table.setFase(Accion.fases[i][j]);
+                        table.setRecurso(Accion.recursos[Accion.recurso[i][j][k]]);
+                        lista.add(table);
+                    }
+                }
                 break;
             }
         }
         for(int i = 0; i < tam; i++){
-            lista.add(getPhaseByAction(action, phase[i]));
+            getPhaseByAction(action, phase[i],lista);
         }
         return lista;
     }
@@ -277,7 +282,7 @@ public class EventService {
 //////////-----
 
     @Async
-    private Table getPhaseByAction(String action,String phase){
+    private List<Table> getPhaseByAction(String action,String phase, List<Table> tablas){
         List<Evento> eventos = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
@@ -295,6 +300,7 @@ public class EventService {
                 searchHits = searchResponse.getHits().getHits();
                 addLog(searchHits, eventos);
             }
+
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("Error: " + ess.getMessage());
         }
@@ -329,9 +335,22 @@ public class EventService {
                             break;
                     }
                 });
+                tablas.forEach((tabla)->{
+                    if(tabla.getFase().equalsIgnoreCase(table.getFase())){
+                        if(tabla.getRecurso().equalsIgnoreCase(table.getRecurso())){
+                            tabla.setTrace(table.getTrace());
+                            tabla.setInfo(table.getInfo());
+                            tabla.setFatal(table.getFatal());
+                            tabla.setError(table.getError());
+                            tabla.setDebug(table.getDebug());
+                        }
+                    }
+                });
             });
+
         });
-        return table;
+
+        return tablas;
     }
 
     @Async
