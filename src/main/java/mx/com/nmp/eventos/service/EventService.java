@@ -17,9 +17,13 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -62,16 +66,16 @@ public class EventService {
     private List<DashBoard> getEventAction(){
         List<DashBoard> boards = new ArrayList<>();
         DashBoard eventAction = new DashBoard();
-        Long[][] data = new Long[1][8];
+        Long[][] data = new Long[1][Accion.name.length];
         List<String> labels = new ArrayList<>();
-        for(int i=0; i<8; i++){
+        for(int i = 0; i < Accion.name.length; i ++){
             data[0][i]=countEventActionLastDay(Key.eventAction,Accion.name[i],labels);
         }
         eventAction.setData(data);
         eventAction.setLabels(labels);
         eventAction.setKey(Key.eventAction);
         long total = 0;
-        for (int i = 0; i < 8 ; i++){
+        for (int i = 0; i < Accion.name.length ; i++){
             total += data[0][i];
         }
         eventAction.setTotal(total);
@@ -93,7 +97,7 @@ public class EventService {
         eventLevel.setLabels(labels);
         eventLevel.setKey(Key.eventLevel);
         long total = 0;
-        for (int i = 0; i < 4 ; i++){
+        for (int i = 0; i < 5 ; i++){
             total += data[0][i];
         }
         eventLevel.setTotal(total);
@@ -146,9 +150,9 @@ public class EventService {
         DashBoard eventYear = new DashBoard();
         List<String> events = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[8][12];
+        Long[][] data = new Long[Accion.name.length][12];
         long total = 0;
-        for (int i = 0; i < 8; i ++){
+        for (int i = 0; i < Accion.name.length; i ++){
             for(int j = 0; j < 12 ; j ++){
                 data[i][j] = countActionByMonth(Accion.name[i],j);
                 total += data[i][j];
@@ -183,6 +187,7 @@ public class EventService {
             if(Accion.name[i].equalsIgnoreCase(action)){
                 phase = Accion.fases[i];
                 tam = phase.length;
+                break;
             }
         }
         for(int i = 0; i < tam; i++){
@@ -271,7 +276,7 @@ public class EventService {
 
 //////////-----
 
-    //@Async
+    @Async
     private Table getPhaseByAction(String action,String phase){
         List<Evento> eventos = new ArrayList<>();
         try {
@@ -299,14 +304,12 @@ public class EventService {
                                 Collectors.groupingBy(Evento::getEventLevel,
                                         Collectors.counting()))));
 
-        if(eventos.size() > 0)System.out.println(eventos.get(0).getEventAction() + "  " + eventos.get(0).getEventPhase());
         Table table = new Table();
         table.setFase(phase);
         result.forEach((fase, mapRecurso) -> {
             mapRecurso.forEach((recurso, mapLevel) -> {
                 table.setRecurso(recurso);
                 mapLevel.forEach((level, count) -> {
-                    System.out.println(String.join(fase, recurso , level + "  " + count));
                     level = level.toUpperCase();
                     switch (level){
                         case Nivel.INFO:
@@ -467,6 +470,68 @@ public class EventService {
         ca1.setMinimalDaysInFirstWeek(1);
         int mes = ca1.get(Calendar.MONTH);
         labels.add(Mes.name[mes]);
+    }
+
+    //-------------------------------
+
+    //@Bean
+    public void cuentaTodo(){
+        List<Evento> eventos = new ArrayList<>();
+        try {
+            SearchRequest searchRequest = new SearchRequest();
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
+                    .gte("now-" + 1 + "d")
+                    .lte("now")
+                    .timeZone(ElasticQuery.getUtc(constants.getTIME_ZONE())));
+            sourceBuilder.query(boolQueryBuilder);
+            sourceBuilder.from(0);
+            sourceBuilder.size(10000);
+            searchRequest.source(sourceBuilder);
+            searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+            searchRequest.indices(constants.getINDICE());
+            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            searchRequest.scroll(scroll);
+            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+            addLog(searchHits, eventos);
+            while (searchHits != null && searchHits.length > 1) {
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+                addLog(searchHits, eventos);
+            }
+        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
+            LOGGER.info("Error: " + ess.getMessage());
+        }
+        System.out.println("Total :" + eventos.size());
+        final Map<String,Map <String , Long>> result = eventos.stream()
+                .collect(Collectors.groupingBy(Evento::getEventAction,
+                        Collectors.groupingBy(Evento::getEventPhase,
+                                        Collectors.counting())));
+
+        result.forEach((action, faseMap  ) -> {
+            faseMap.forEach((fase, count  ) -> {
+                System.out.println(String.join("",action+" ",fase  + " : " , count.toString()));
+            });
+        });
+
+        List<String> acciones = new ArrayList<>();
+
+        eventos.forEach(logIndice -> {
+                acciones.add(logIndice.getEventAction());
+        });
+        System.out.println("Descartando duplicados...");
+        List<String> valoresUnicos = acciones
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+
+
     }
 
 }

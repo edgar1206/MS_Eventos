@@ -13,10 +13,13 @@ import java.util.TimeZone;
 public class ElasticQuery {
 
     public static SearchRequest getByActionWeek(String action, String fase, String index, String timeZone){
+        if(action.equalsIgnoreCase("Solicitar Pagos")){
+            action = "Solicitar";
+        }
         SearchRequest searchRequest = new SearchRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchQuery("eventAction",action));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",fase));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + 6 + "d/d")
@@ -35,7 +38,7 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchQuery(field,value));
+        boolQueryBuilder.must(QueryBuilders.matchPhrasePrefixQuery(field,value));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte("now-1d").lte("now").timeZone(ElasticQuery.getUtc(timeZone)));
         searchSourceBuilder.query(boolQueryBuilder);
         countRequest.indices(index);
@@ -47,8 +50,8 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchQuery("eventLevel", level));
-        boolQueryBuilder.must(QueryBuilders.matchQuery("eventPhase", phase));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel", level));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase", phase));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + dia + "d/d")
                 .lte("now-" + dia + "d/d")
@@ -87,7 +90,7 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchQuery("eventAction",accion));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",accion));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + mes + "M/M")
                 .lte("now-" + mes + "M/M")
@@ -99,11 +102,14 @@ public class ElasticQuery {
     }
 
     public static CountRequest getByActionLevelDay(int dia, String action, String level, String index, String timeZone){
+        if(action.equalsIgnoreCase("Solicitar Pagos")){
+            action = "Solicitar";
+        }
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchQuery("eventAction", action));
-        boolQueryBuilder.must(QueryBuilders.matchQuery("eventLevel", level));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel", level));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + dia + "d/d")
                 .lte("now-" + dia + "d/d")

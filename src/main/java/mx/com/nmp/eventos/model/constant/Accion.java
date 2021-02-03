@@ -11,9 +11,9 @@ public class Accion {
             "Promociones",
             "Boletas",
             "Movimientos",
-            "Solicitar Pagos",
+            "Solicitar Pagos", //Solicitar Pagos - Solicitar PAgos
             "Registro tarjeta MS",
-            "OpenPay read customer list from merchant - Lista vacia ",
+            "OpenPay read customer list from merchant - Lista vacia",
             "Associating the card to the customer",
             "Delete token"};
 
@@ -26,7 +26,7 @@ public class Accion {
             {"getPromotions","savePromotion","deletePromotion"},
             {"Contratos Por Folio","Obtener Créditos","Desacarga Ticket"},
             {"Consulta","Descarga"},
-            {"Realizar pago"},
+            {"Realizar pago","Finalizar transacción"},
             {"Registro Tarjeta"},
             {"Registro Tarjeta"},
             {"Registro Tarjeta"},
