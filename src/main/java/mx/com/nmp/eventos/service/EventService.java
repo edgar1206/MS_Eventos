@@ -179,23 +179,24 @@ public class EventService {
 
     private List<Table> getTable(String action){
         List<Table> lista = new ArrayList<>();
+        int posAction = 0;
         String[] phase = new String[0]; int tam = 0;
         for(int i = 0; i < Accion.name.length; i++){
             if(Accion.name[i].equalsIgnoreCase(action)){
                 phase = Accion.fases[i];
                 tam = phase.length;
-                for(int j =0; j< Accion.fases[i].length;j++){
-                    for(int k=0; k<Accion.recurso[i][j].length;k++){
-                        Table table = new Table();
-                        table.setFase(Accion.fases[i][j]);
-                        table.setRecurso(Accion.recursos[Accion.recurso[i][j][k]]);
-                        lista.add(table);
-                    }
-                }
+                posAction = i;
                 break;
             }
         }
+
         for(int i = 0; i < tam; i++){
+            for(int j=0; j < Accion.recurso[posAction][i].length; j++){
+                Table table = new Table();
+                table.setFase(phase[i]);
+                table.setRecurso(Accion.recursos[Accion.recurso[posAction][i][j]]);
+                lista.add(table);
+            }
             getPhaseByAction(action, phase[i],lista);
         }
         return lista;
@@ -297,7 +298,7 @@ public class EventService {
 //////////-----
 
     @Async
-    private List<Table> getPhaseByAction(String action,String phase, List<Table> tablas){
+    private void getPhaseByAction(String action, String phase, List<Table> tablas){
         List<Evento> eventos = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
@@ -365,8 +366,6 @@ public class EventService {
             });
 
         });
-
-        return tablas;
     }
 
     @Async
