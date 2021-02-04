@@ -48,7 +48,7 @@ public class Accion {
                     { 3 },
             },
             {
-                    { 4, 3},
+                    { 4, 3 },
                     { 3 },
                     { 3 },
                     { 4 },
@@ -76,8 +76,8 @@ public class Accion {
                     { 2 }
             },
             {
-                    { 19 },
-                    { 20 }
+                    { 20 },
+                    { 19 }
             },
             {
                     { 9 }
@@ -112,9 +112,51 @@ public class Accion {
             "https://rsi.montepiedad.com.mx//NMP/GestionClientes/NivelCliente/v1?apiKey=",
             "https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089",
             "9243//d1ce82a01df14b9c8c1b1feb3ba3005d.us-east-1.aws.found.io/d1ce82a01df14b9c8c1b1feb3ba3005d.us-east-1",
-            "https://rsi.montepiedad.com.mx//NMP/oauth/token:8089",
             "https://rsi.montepiedad.com.mx//NMP/OperacionPrendaria/OperacionesEnLinea/Transaccion.svc/v1/FinalizarTransaccion",
             "https://rsi.montepiedad.com.mx//NMP/OperacionPrendaria/OperacionesEnLinea/Transaccion.svc/v1/Transaccion"
+    };
+
+    public static String [] codigoFase = {
+            "AutenticarLogin",
+            "Initiate Auth",
+            "Usuario Monte",
+            "Token OAuth",
+            "Validar Datos",
+            "Solicitar Activación Token",
+            "Solicitar Alta Cuenta",
+            "Validar Medio Contacto",
+            "Registrar Nueva Contraseña",
+            "Solicitar Reinicio Contraseña",
+            "Registrar Nueva Contraseña OAuth",
+            "Solicitar Reinicio Contraseña OAuth",
+            "Registro Tarjeta MS",
+            "Obtener Créditos",
+            "Desacarga Ticket",
+            "Contratos Por Folio",
+            "AutenticarDeleteToken",
+            "Consulta",
+            "Descarga",
+            "AutenticarRefreshToken",
+            "getCampaign",
+            "deletePromotion",
+            "savePromotion",
+            "getPromotions",
+            "Edición Tarjeta",
+            "Eliminar Tarjeta",
+            "Consulta tarjeta",
+            "Realizar pago",
+            "Finalizar transacción",
+            "Registro Tarjeta CC",
+            "Registro Tarjeta OpenPay"
+    };
+
+    public static String [] accionFase = {
+            "AutenticarLogin",
+            "Registro Tarjeta MS",
+            "AutenticarDeleteToken",
+            "AutenticarRefreshToken",
+            "Registro Tarjeta CC",
+            "Registro Tarjeta OpenPay"
     };
 
 }

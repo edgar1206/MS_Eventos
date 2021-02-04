@@ -12,7 +12,7 @@ import java.util.TimeZone;
 
 public class ElasticQuery {
 
-    public static SearchRequest getByActionWeek(String action, String fase, String index, String timeZone){
+    public static SearchRequest getByActionWeek(String action, String phase, String index, String timeZone){
         if(action.equalsIgnoreCase("Solicitar Pagos")){
             action = "Solicitar";
         }
@@ -20,7 +20,7 @@ public class ElasticQuery {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",fase));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + 6 + "d/d")
                 .lte("now-" + 0 + "d/d")
@@ -46,10 +46,11 @@ public class ElasticQuery {
         return countRequest;
     }
 
-    public static CountRequest getByNameDay(String dia,String level,String phase,String index, String timeZone){
+    public static CountRequest getByNameDay(String dia,String level,String action, String phase,String index, String timeZone){
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel", level));
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase", phase));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
@@ -86,11 +87,11 @@ public class ElasticQuery {
         return countRequest;
     }
 
-    public static CountRequest getByMonth(String accion, int mes,String index, String timeZone){
+    public static CountRequest getByMonth(String action, int mes,String index, String timeZone){
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",accion));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + mes + "M/M")
                 .lte("now-" + mes + "M/M")

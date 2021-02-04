@@ -9,6 +9,7 @@ import mx.com.nmp.eventos.model.response.SecondLevel;
 import mx.com.nmp.eventos.model.response.Table;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.utils.ElasticQuery;
+import mx.com.nmp.eventos.utils.Validator;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.search.SearchRequest;
@@ -22,7 +23,6 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -227,22 +227,37 @@ public class EventService {
     ///  Tercer Nivel
 
     public List<DashBoard> getThirdLevel(String fase){
+        String action = "";
+        if(fase.contains(",")){
+            action = Validator.getAccion(fase);
+            fase = Validator.getFase(fase);
+        }else{
+            for (int i = 0; i < Accion.name.length; i++){
+                for(int j = 0; j < Accion.fases[i].length; j ++){
+                    if (fase.equalsIgnoreCase(Accion.fases[i][j])) {
+                        action = Accion.name[i];
+                        fase = Accion.fases[i][j];
+                        break;
+                    }
+                }
+            }
+        }
         List<DashBoard> boards = new ArrayList<>();
         for(int i =0; i < Nivel.name.length; i++ ){
-            boards.addAll(getByLevel(fase, Nivel.name[i]));
+            boards.addAll(getByLevel(action, fase, Nivel.name[i]));
         }
-        boards.addAll(getPhaseEventWeek(fase));
+        boards.addAll(getPhaseEventWeek(action, fase));
         return boards;
     }
 
-    private List<DashBoard> getByLevel(String fase, String lvl){
+    private List<DashBoard> getByLevel(String accion ,String fase, String lvl){
         List<DashBoard> boards = new ArrayList<>();
         DashBoard level = new DashBoard();
         List<String> labels = new ArrayList<>();
         Long[][] data = new Long[1][7];
         long total = 0;
         for(int i=0; i < 7; i++){
-            data[0][i] = countByNameDay(String.valueOf(i), labels, lvl, fase);
+            data[0][i] = countByNameDay(String.valueOf(i), labels, lvl, accion, fase);
             total += data[0][i];
         }
         level.setKey(lvl);
@@ -253,7 +268,7 @@ public class EventService {
         return boards;
     }
 
-    private List<DashBoard> getPhaseEventWeek(String phase){
+    private List<DashBoard> getPhaseEventWeek(String action,String phase){
         List<DashBoard> boards = new ArrayList<>();
         DashBoard eventWeek = new DashBoard();
         List<String> events = new ArrayList<>();
@@ -263,7 +278,7 @@ public class EventService {
         for (int i = 0; i < 5; i ++){
             events.add(Nivel.name[i]);
             for(int j = 0; j < 7 ; j ++){
-                data[i][j] = countByDayPhaseLevel(j,Nivel.name[i],phase);
+                data[i][j] = countByDayPhaseLevel(j,Nivel.name[i],action,phase);
                 total += data[i][j];
             }
         }
@@ -338,7 +353,7 @@ public class EventService {
                 });
                 tablas.forEach((tabla)->{
                     if(tabla.getFase().equalsIgnoreCase(table.getFase())){
-                        if(tabla.getRecurso().equalsIgnoreCase(table.getRecurso())){
+                        if(table.getRecurso().contains(tabla.getRecurso())){
                             tabla.setTrace(table.getTrace());
                             tabla.setInfo(table.getInfo());
                             tabla.setFatal(table.getFatal());
@@ -367,9 +382,9 @@ public class EventService {
     }
 
     @Async
-    private long countByDayPhaseLevel(int dia, String level, String phase){
+    private long countByDayPhaseLevel(int dia, String level, String action ,String phase){
         try {
-            CountRequest countRequest = ElasticQuery.getByNameDay(String.valueOf(dia) , level, phase , constants.getINDICE(),constants.getTIME_ZONE());
+            CountRequest countRequest = ElasticQuery.getByNameDay(String.valueOf(dia) , level, action, phase , constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -379,10 +394,10 @@ public class EventService {
     }
 
     @Async
-    public long countByNameDay(String dia, List<String> labels, String level, String phase){
+    public long countByNameDay(String dia, List<String> labels, String level, String action, String phase){
         labels.add(getNameDayOfWeek(dia));
         try {
-            CountRequest countRequest = ElasticQuery.getByNameDay(dia,level,phase,constants.getINDICE(),constants.getTIME_ZONE());
+            CountRequest countRequest = ElasticQuery.getByNameDay(dia,level,action,phase,constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {
@@ -490,69 +505,6 @@ public class EventService {
         ca1.setMinimalDaysInFirstWeek(1);
         int mes = ca1.get(Calendar.MONTH);
         labels.add(Mes.name[mes]);
-    }
-
-    //-------------------------------
-
-    @Bean
-    public void cuentaTodo(){
-        List<Evento> eventos = new ArrayList<>();
-        System.out.println(Accion.recursos[Accion.recurso[0][1][0]]);
-        /*try {
-            SearchRequest searchRequest = new SearchRequest();
-            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-            BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
-                    .gte("now-" + 1 + "d")
-                    .lte("now")
-                    .timeZone(ElasticQuery.getUtc(constants.getTIME_ZONE())));
-            sourceBuilder.query(boolQueryBuilder);
-            sourceBuilder.from(0);
-            sourceBuilder.size(10000);
-            searchRequest.source(sourceBuilder);
-            searchRequest.scroll(TimeValue.timeValueMinutes(1L));
-            searchRequest.indices(constants.getINDICE());
-            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            searchRequest.scroll(scroll);
-            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            String scrollId = searchResponse.getScrollId();
-            SearchHit[] searchHits = searchResponse.getHits().getHits();
-            addLog(searchHits, eventos);
-            while (searchHits != null && searchHits.length > 1) {
-                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-                scrollRequest.scroll(scroll);
-                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
-                scrollId = searchResponse.getScrollId();
-                searchHits = searchResponse.getHits().getHits();
-                addLog(searchHits, eventos);
-            }
-        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
-            LOGGER.info("Error: " + ess.getMessage());
-        }
-        System.out.println("Total :" + eventos.size());
-        final Map<String,Map <String , Long>> result = eventos.stream()
-                .collect(Collectors.groupingBy(Evento::getEventAction,
-                        Collectors.groupingBy(Evento::getEventPhase,
-                                        Collectors.counting())));
-
-        result.forEach((action, faseMap  ) -> {
-            faseMap.forEach((fase, count  ) -> {
-                System.out.println(String.join("",action+" ",fase  + " : " , count.toString()));
-            });
-        });
-
-        List<String> acciones = new ArrayList<>();
-
-        eventos.forEach(logIndice -> {
-                acciones.add(logIndice.getEventAction());
-        });
-        System.out.println("Descartando duplicados...");
-        List<String> valoresUnicos = acciones
-                .stream()
-                .distinct()
-                .collect(Collectors.toList());
-*/
-
     }
 
 }

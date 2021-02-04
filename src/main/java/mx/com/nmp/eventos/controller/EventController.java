@@ -4,6 +4,7 @@ import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.DashBoard;
 import mx.com.nmp.eventos.model.response.SecondLevel;
 import mx.com.nmp.eventos.service.EventService;
+import mx.com.nmp.eventos.utils.Validator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,14 +40,20 @@ public class EventController {
 
     @GetMapping(value = "/second_level",params = "action")
     public SecondLevel getSecondLevel(@RequestParam("action")String action){
-        if(action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio");
-        return serviceLog.getSecondLevel(action);
+        if(action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
+        if(Validator.validateAction(action)){
+            return serviceLog.getSecondLevel(action);
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, acción no válida.");
     }
 
     @GetMapping(value = "/third_level",params = "fase")
     public List<DashBoard> getThirdLevel(@RequestParam("fase")String fase){
-        if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio");
-        return serviceLog.getThirdLevel(fase);
+        if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
+        if(Validator.validatePhase(fase)){
+            return serviceLog.getThirdLevel(Validator.getPhase(fase));
+        }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, fase no válida.");
     }
 
 }
