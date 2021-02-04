@@ -303,6 +303,7 @@ public class EventService {
 
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("Error: " + ess.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
         final Map<String, Map<String, Map<String, Long>>> result = eventos.stream()
                 .collect(Collectors.groupingBy(Evento::getEventPhase,
