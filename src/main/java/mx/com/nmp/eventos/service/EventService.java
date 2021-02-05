@@ -31,6 +31,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -195,10 +197,13 @@ public class EventService {
                 Table table = new Table();
                 table.setFase(phase[i]);
                 table.setRecurso(Accion.recursos[Accion.recurso[posAction][i][j]]);
+                getPhaseByAction(action, phase[i], Accion.recursos[Accion.recurso[posAction][i][j]], table);
                 lista.add(table);
             }
-            getPhaseByAction(action, phase[i],lista);
+            //getPhaseByAction(action, phase[i],lista);
         }
+        long total = lista.stream().mapToLong(table -> table.getInfo() + table.getDebug() + table.getError()).sum();
+        System.out.println(action + ": " + total);
         return lista;
     }
 
@@ -298,11 +303,11 @@ public class EventService {
 //////////-----
 
     @Async
-    private void getPhaseByAction(String action, String phase, List<Table> tablas){
+    private void getPhaseByAction(String action, String phase, String resource, Table table){
         List<Evento> eventos = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getByActionWeek(action,phase,constants.getINDICE(),constants.getTIME_ZONE());
+            SearchRequest searchRequest = ElasticQuery.getByActionWeekResource(action,phase,resource,constants.getINDICE(),constants.getTIME_ZONE());
             searchRequest.scroll(scroll);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             String scrollId = searchResponse.getScrollId();
@@ -321,50 +326,33 @@ public class EventService {
             LOGGER.info("Error: " + ess.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
-        final Map<String, Map<String, Map<String, Long>>> result = eventos.stream()
+        final Map<String, Map<String, Long>> result = eventos.stream()
                 .collect(Collectors.groupingBy(Evento::getEventPhase,
-                        Collectors.groupingBy(Evento::getEventResource,
                                 Collectors.groupingBy(Evento::getEventLevel,
-                                        Collectors.counting()))));
+                                        Collectors.counting())));
 
-        Table table = new Table();
         table.setFase(phase);
-        result.forEach((fase, mapRecurso) -> {
-            mapRecurso.forEach((recurso, mapLevel) -> {
-                table.setRecurso(recurso);
-                mapLevel.forEach((level, count) -> {
-                    level = level.toUpperCase();
-                    switch (level){
-                        case Nivel.INFO:
-                            table.setInfo(count);
-                            break;
-                        case Nivel.ERROR:
-                            table.setError(count);
-                            break;
-                        case Nivel.DEBUG:
-                            table.setDebug(count);
-                            break;
-                        case Nivel.TRACE:
-                            table.setTrace(count);
-                            break;
-                        case Nivel.FATAL:
-                            table.setFatal(count);
-                            break;
-                    }
-                });
-                tablas.forEach((tabla)->{
-                    if(tabla.getFase().equalsIgnoreCase(table.getFase())){
-                        if(table.getRecurso().contains(tabla.getRecurso())){
-                            tabla.setTrace(table.getTrace());
-                            tabla.setInfo(table.getInfo());
-                            tabla.setFatal(table.getFatal());
-                            tabla.setError(table.getError());
-                            tabla.setDebug(table.getDebug());
-                        }
-                    }
-                });
+        result.forEach((fase, mapLevel) -> {
+            mapLevel.forEach((level, count) -> {
+                level = level.toUpperCase();
+                switch (level){
+                    case Nivel.INFO:
+                        table.setInfo(count);
+                        break;
+                    case Nivel.ERROR:
+                        table.setError(count);
+                        break;
+                    case Nivel.DEBUG:
+                        table.setDebug(count);
+                        break;
+                    case Nivel.TRACE:
+                        table.setTrace(count);
+                        break;
+                    case Nivel.FATAL:
+                        table.setFatal(count);
+                        break;
+                }
             });
-
         });
     }
 
