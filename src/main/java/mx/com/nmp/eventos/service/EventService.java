@@ -200,10 +200,8 @@ public class EventService {
                 getPhaseByAction(action, phase[i], Accion.recursos[Accion.recurso[posAction][i][j]], table);
                 lista.add(table);
             }
-            //getPhaseByAction(action, phase[i],lista);
         }
         long total = lista.stream().mapToLong(table -> table.getInfo() + table.getDebug() + table.getError()).sum();
-        System.out.println(action + ": " + total);
         return lista;
     }
 
