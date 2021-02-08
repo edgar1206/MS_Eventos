@@ -35,27 +35,7 @@ public class ElasticQuery {
         return searchRequest;
     }
 
-    public static SearchRequest getByActionWeek(String action, String phase, String index, String timeZone){
-        if(action.equalsIgnoreCase("Solicitar Pagos")){
-            action = "Solicitar";
-        }
-        SearchRequest searchRequest = new SearchRequest();
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
-        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
-                .gte("now-" + 6 + "d/d")
-                .lte("now-" + 0 + "d/d")
-                .timeZone(getUtc(timeZone)));
-        sourceBuilder.query(boolQueryBuilder);
-        sourceBuilder.from(0);
-        sourceBuilder.size(10000);
-        searchRequest.source(sourceBuilder);
-        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
-        searchRequest.indices(index);
-        return searchRequest;
-    }
+
 
     public static CountRequest getActionLevelLastDay(String field ,String value, String index, String timeZone){
         CountRequest countRequest = new CountRequest();
