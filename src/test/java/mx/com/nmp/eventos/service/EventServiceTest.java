@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.Assert;
+import org.springframework.web.server.ResponseStatusException;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
@@ -25,6 +26,7 @@ import java.util.Date;
 import java.util.Map;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class EventServiceTest {
@@ -53,8 +55,6 @@ class EventServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
-        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
         index="smnr_mimonte_eventos";
     try {
             embeddedElastic = EmbeddedElastic.builder()
@@ -70,10 +70,10 @@ class EventServiceTest {
                             new HttpHost("localhost", 21121, "http")
                     ));
             embeddedElastic.start();
-            insertGeneric(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://iamdr.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:4444"), restHighLevelClient, "1");
-            insertGeneric(getEvento("2","MiMonte", "Microservicios-L2" ,"INFO","Usuario Monte","https://iamdr.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:4444"), restHighLevelClient, "2");
+            insertGeneric(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089", "Usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"), restHighLevelClient, "1");
+            insertGeneric(getEvento("2","MiMonte", "Microservicios-L2" ,"INFO","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089","usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"), restHighLevelClient, "2");
     }catch(final Exception e) {
-        throw new RuntimeException("EMbeddedElastic, can not initialize");
+        throw new RuntimeException("EmbeddedElastic, can not initialize");
     }
 
         eventService.setRestHighLevelClient(restHighLevelClient);
@@ -83,7 +83,7 @@ class EventServiceTest {
         embeddedElastic.stop();
         embeddedElastic = null;
     }
-    private Evento getEvento(String id, String applicationName, String resolutionTower, String level, String phase, String resource){
+    private Evento getEvento(String id, String applicationName, String resolutionTower, String level, String phase, String resource, String category, String action, String configurationElement, String severity, String eventDescription, String eventType){
         Evento eventoTest = new Evento();
         eventoTest.setIdEvent(id);
         eventoTest.setApplicationName(applicationName);
@@ -91,27 +91,46 @@ class EventServiceTest {
         eventoTest.setTimeGenerated(new Date());
         eventoTest.setEventLevel(level);
         eventoTest.setEventPhase(phase);
+        eventoTest.setEventCategory(category);
         eventoTest.setEventResource(resource);
+        eventoTest.setEventAction(action);
+        eventoTest.setConfigurationElement(configurationElement);
+        eventoTest.setSeverity(severity);
+        eventoTest.setEventDescription(eventDescription);
+        eventoTest.setEventType(eventType);
         return eventoTest;
     }
 
     @Test
-    void getDashboard() throws IOException {
-       // CountRequest countRequest = new CountRequest();
-        //Mockito.when(restHighLevelClient.count(countRequest, RequestOptions.DEFAULT)).thenReturn(mock(CountResponse.class));
-        //Mockito.when(restHighLevelClient.count(countRequest, RequestOptions.DEFAULT)).thenReturn(mock(CountResponse.class));
-       // Mockito.when(countResponse.getCount()).thenReturn(3L);
+    void getDashboard(){
+        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
+        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
         Assert.notNull( eventService.getDashboard());
     }
 
     @Test
-    void getSecondLevel() throws IOException {
-        eventService.getSecondLevel("Registro");
+    void getSecondLevel()  {
+        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
+        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
+        eventService.getSecondLevel("Login");
     }
 
     @Test
     void getThirdLevel() {
+        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
+        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
         eventService.getThirdLevel("Autenticar");
+    }
+
+    @Test
+    void addEventException(){
+        boolean thrown = false;
+        try {
+            eventService.addEvent(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089", "Usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"));
+        } catch (ResponseStatusException e) {
+            thrown = true;
+        }
+        assertTrue(thrown);
 
     }
 
@@ -121,6 +140,5 @@ class EventServiceTest {
     }
      private static <T> void insertGeneric(T clazz, RestHighLevelClient client, String id) throws IOException{
         IndexRequest indexRequest = new IndexRequest("smnr_mimonte_eventos", "doc", id).source(transformerObject(clazz));
-       // LOGGER.info("prueba {​​​​​​​​}​​​​​​​​", client.index(indexRequest, RequestOptions.DEFAULT));
     }
 }

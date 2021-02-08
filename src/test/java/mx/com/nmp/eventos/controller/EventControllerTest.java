@@ -11,6 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class EventControllerTest {
@@ -44,10 +47,30 @@ class EventControllerTest {
         Mockito.when(eventService.getSecondLevel("Registro")).thenReturn(secondLevel);
         Assertions.assertEquals(secondLevel,eventController.getSecondLevel("Registro"));
     }
+    @Test
+    void getSecondLevelException() {
+        boolean thrown = false;
+        try {
+            eventController.getSecondLevel("Registroo");
+        } catch (ResponseStatusException e) {
+            thrown = true;
+        }
+        assertTrue(thrown);
+    }
 
     @Test
     void getThirdLevel() {
-        Assertions.assertNotNull(eventController.getThirdLevel("Autenticar"));
+        Assertions.assertNotNull(eventController.getThirdLevel("AutenticarLogin"));
 
+    }
+    @Test
+    void getThirdLevelException() {
+        boolean thrown = false;
+        try {
+            eventController.getThirdLevel("Autenticar");
+        } catch (ResponseStatusException e) {
+            thrown = true;
+        }
+        assertTrue(thrown);
     }
 }
