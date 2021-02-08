@@ -35,8 +35,6 @@ public class ElasticQuery {
         return searchRequest;
     }
 
-
-
     public static CountRequest getActionLevelLastDay(String field ,String value, String index, String timeZone){
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
