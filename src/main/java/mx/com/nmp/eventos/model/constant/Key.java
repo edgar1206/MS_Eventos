@@ -7,5 +7,6 @@ public class Key {
     public static final String eventWeek = "eventWeek";
     public static final String eventMonth = "eventMonth";
     public static final String eventYear = "eventYear";
+    public static final String eventActionLastDay = "eventActionLastDay";
 
 }

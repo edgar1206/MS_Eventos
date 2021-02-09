@@ -31,8 +31,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -63,6 +61,7 @@ public class EventService {
         boards.addAll(getEventWeek());
         boards.addAll(getEventMonth());
         boards.addAll(getEventYear());
+        boards.addAll(getEventDayActionLevel());
         return boards;
     }
 
@@ -171,6 +170,31 @@ public class EventService {
         eventYear.setTotal(total);
         eventYear.setKey(Key.eventYear);
         boards.add(eventYear);
+        return boards;
+    }
+    private List<DashBoard> getEventDayActionLevel(){
+        List<DashBoard> boards = new ArrayList<>();
+        DashBoard eventDayActionLevel = new DashBoard();
+        List<String> levels = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        Long[][] data = new Long[Nivel.name.length][Accion.name.length];
+        long total = 0;
+        for (int i = 0; i < Nivel.name.length; i ++){
+            for(int j = 0; j < Accion.name.length ; j ++){
+                data[i][j] = countByLevelActionDay(Accion.name[j],Nivel.name[i]);
+                total += data[i][j];
+            }
+            levels.add(Nivel.name[i]);
+        }
+        for(int m = 0; m < Accion.name.length ; m ++){
+            labels.add(Accion.name[m]);
+        }
+        eventDayActionLevel.setLabels(labels);
+        eventDayActionLevel.setLevels(levels);
+        eventDayActionLevel.setData(data);
+        eventDayActionLevel.setTotal(total);
+        eventDayActionLevel.setKey(Key.eventActionLastDay);
+        boards.add(eventDayActionLevel);
         return boards;
     }
 
@@ -413,6 +437,17 @@ public class EventService {
         labels.add(getWeekOfMonth(week));
         try {
             CountRequest countRequest = ElasticQuery.getByWeek(week,constants.getINDICE(),constants.getTIME_ZONE());
+            CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
+            return countResponse.getCount();
+        } catch (IOException e) {
+            LOGGER.info("Error: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+    @Async
+    public long countByLevelActionDay(String action, String level){
+        try {
+            CountRequest countRequest = ElasticQuery.getActionLevelLastDayDashboard(action, level,constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
             return countResponse.getCount();
         } catch (IOException e) {

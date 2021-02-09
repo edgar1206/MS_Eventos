@@ -48,6 +48,19 @@ public class ElasticQuery {
         countRequest.source(searchSourceBuilder);
         return countRequest;
     }
+    public static CountRequest getActionLevelLastDayDashboard(String action ,String level, String index, String timeZone){
+        CountRequest countRequest = new CountRequest();
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel", level));
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte("now-1d").lte("now").timeZone(ElasticQuery.getUtc(timeZone)));
+        searchSourceBuilder.query(boolQueryBuilder);
+        countRequest.indices(index);
+        countRequest.source(searchSourceBuilder);
+        return countRequest;
+    }
+
 
     public static CountRequest getByNameDay(String dia,String level,String action, String phase,String index, String timeZone){
         CountRequest countRequest = new CountRequest();

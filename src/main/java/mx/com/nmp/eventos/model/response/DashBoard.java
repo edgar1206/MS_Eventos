@@ -13,6 +13,7 @@ public class DashBoard implements Serializable {
     private List<String> events;
     private long total;
     private String key;
+    private List<String> levels;
 
     public Long[][] getData() {
         return data;
@@ -52,5 +53,13 @@ public class DashBoard implements Serializable {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public List<String> getLevels() {
+        return levels;
+    }
+
+    public void setLevels(List<String> levels) {
+        this.levels = levels;
     }
 }
