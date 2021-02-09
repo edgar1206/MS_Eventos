@@ -13,5 +13,5 @@ applications:
     ELASTICSEARCH_USER: cprocopio@montepiedad.com.mx
     ELASTICSEARCH_SCT: Nmp+2406$
     ELASTICSEARCH_INDEX: smnr_mimonte_eventos
-    ERROR_INCLUDE_MESSAGE: always
+    ERROR_INCLUDE_MESSAGE: ALWAYS
     TIME_ZONE: America/Mexico_City
