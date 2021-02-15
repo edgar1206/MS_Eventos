@@ -8,18 +8,18 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DashBoard implements Serializable {
 
-    private Long[][] data;
+    private Object data;
     private List<String> labels;
     private List<String> events;
     private long total;
     private String key;
     private List<String> levels;
 
-    public Long[][] getData() {
+    public Object getData() {
         return data;
     }
 
-    public void setData(Long[][] data) {
+    public void setData(Object data) {
         this.data = data;
     }
 

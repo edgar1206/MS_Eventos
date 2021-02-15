@@ -286,11 +286,11 @@ public class EventService {
         List<DashBoard> boards = new ArrayList<>();
         DashBoard level = new DashBoard();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[1][7];
+        Long[] data = new Long[7];
         long total = 0;
         for(int i=0; i < 7; i++){
-            data[0][i] = countByNameDay(String.valueOf(i), labels, lvl, accion, fase);
-            total += data[0][i];
+            data[i] = countByNameDay(String.valueOf(i), labels, lvl, accion, fase);
+            total += data[i];
         }
         level.setKey(lvl);
         level.setTotal(total);
