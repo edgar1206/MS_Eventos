@@ -68,17 +68,17 @@ public class EventService {
     private List<DashBoard> getEventAction(){
         List<DashBoard> boards = new ArrayList<>();
         DashBoard eventAction = new DashBoard();
-        Long[][] data = new Long[1][Accion.name.length];
+        Long[] data = new Long[Accion.name.length];
         List<String> labels = new ArrayList<>();
         for(int i = 0; i < Accion.name.length; i ++){
-            data[0][i]=countEventActionLastDay(Key.eventAction,Accion.name[i],labels);
+            data[i]=countEventActionLastDay(Key.eventAction,Accion.name[i],labels);
         }
         eventAction.setData(data);
         eventAction.setLabels(labels);
         eventAction.setKey(Key.eventAction);
         long total = 0;
         for (int i = 0; i < Accion.name.length ; i++){
-            total += data[0][i];
+            total += data[i];
         }
         eventAction.setTotal(total);
         boards.add(eventAction);
@@ -89,18 +89,18 @@ public class EventService {
         List<DashBoard> boards = new ArrayList<>();
         DashBoard eventLevel = new DashBoard();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[1][5];
-        data[0][0]=countEventActionLastDay(Key.eventLevel, Nivel.info,labels);
-        data[0][1]=countEventActionLastDay(Key.eventLevel, Nivel.error,labels);
-        data[0][2]=countEventActionLastDay(Key.eventLevel, Nivel.debug,labels);
-        data[0][3]=countEventActionLastDay(Key.eventLevel, Nivel.fatal,labels);
-        data[0][4]=countEventActionLastDay(Key.eventLevel, Nivel.trace,labels);
+        Long[] data = new Long[5];
+        data[0]=countEventActionLastDay(Key.eventLevel, Nivel.info,labels);
+        data[1]=countEventActionLastDay(Key.eventLevel, Nivel.error,labels);
+        data[2]=countEventActionLastDay(Key.eventLevel, Nivel.debug,labels);
+        data[3]=countEventActionLastDay(Key.eventLevel, Nivel.fatal,labels);
+        data[4]=countEventActionLastDay(Key.eventLevel, Nivel.trace,labels);
         eventLevel.setData(data);
         eventLevel.setLabels(labels);
         eventLevel.setKey(Key.eventLevel);
         long total = 0;
         for (int i = 0; i < 5 ; i++){
-            total += data[0][i];
+            total += data[i];
         }
         eventLevel.setTotal(total);
         boards.add(eventLevel);
@@ -111,16 +111,16 @@ public class EventService {
         List<DashBoard> boards = new ArrayList<>();
         DashBoard eventWeek = new DashBoard();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[1][7];
+        Long[] data = new Long[7];
         for(int i = 0; i < 7 ; i ++){
-            data[0][i]=countByDay(String.valueOf(i),labels);
+            data[i]=countByDay(String.valueOf(i),labels);
         }
         eventWeek.setData(data);
         eventWeek.setLabels(labels);
         eventWeek.setKey(Key.eventWeek);
         long total = 0;
         for (int i = 0; i < 7 ; i++){
-            total += data[0][i];
+            total += data[i];
         }
         eventWeek.setTotal(total);
         boards.add(eventWeek);
@@ -131,16 +131,16 @@ public class EventService {
         List<DashBoard> boards = new ArrayList<>();
         DashBoard eventMonth = new DashBoard();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[1][4];
+        Long[] data = new Long[4];
         for(int i = 0; i < 4 ; i ++){
-            data[0][i]=countByWeek(String.valueOf(i),labels);
+            data[i]=countByWeek(String.valueOf(i),labels);
         }
         eventMonth.setData(data);
         eventMonth.setLabels(labels);
         eventMonth.setKey(Key.eventMonth);
         long total = 0;
         for (int i = 0; i < 4 ; i++){
-            total += data[0][i];
+            total += data[i];
         }
         eventMonth.setTotal(total);
         boards.add(eventMonth);
