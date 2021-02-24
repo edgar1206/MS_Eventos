@@ -3,7 +3,6 @@ package mx.com.nmp.eventos.model.response;
 public class Table {
 
     private String fase;
-    private String recurso;
     private long info;
     private long error;
     private long debug;
@@ -16,14 +15,6 @@ public class Table {
 
     public void setFase(String fase) {
         this.fase = fase;
-    }
-
-    public String getRecurso() {
-        return recurso;
-    }
-
-    public void setRecurso(String recurso) {
-        this.recurso = recurso;
     }
 
     public long getInfo() {

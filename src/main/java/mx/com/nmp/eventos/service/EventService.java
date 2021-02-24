@@ -172,6 +172,7 @@ public class EventService {
         boards.add(eventYear);
         return boards;
     }
+
     private List<DashBoard> getEventDayActionLevel(){
         List<DashBoard> boards = new ArrayList<>();
         DashBoard eventDayActionLevel = new DashBoard();
@@ -209,27 +210,20 @@ public class EventService {
 
     private List<Table> getTable(String action){
         List<Table> lista = new ArrayList<>();
-        int posAction = 0;
         String[] phase = new String[0]; int tam = 0;
         for(int i = 0; i < Accion.name.length; i++){
             if(Accion.name[i].equalsIgnoreCase(action)){
                 phase = Accion.fases[i];
                 tam = phase.length;
-                posAction = i;
                 break;
             }
         }
-
         for(int i = 0; i < tam; i++){
-            for(int j=0; j < Accion.recurso[posAction][i].length; j++){
-                Table table = new Table();
-                table.setFase(phase[i]);
-                table.setRecurso(Accion.recursos[Accion.recurso[posAction][i][j]]);
-                getPhaseByAction(action, phase[i], Accion.recursos[Accion.recurso[posAction][i][j]], table);
-                lista.add(table);
-            }
+            Table table = new Table();
+            table.setFase(phase[i]);
+            getPhaseByAction(action, phase[i], table);
+            lista.add(table);
         }
-        long total = lista.stream().mapToLong(table -> table.getInfo() + table.getDebug() + table.getError()).sum();
         return lista;
     }
 
@@ -276,14 +270,13 @@ public class EventService {
         }
         List<DashBoard> boards = new ArrayList<>();
         for(int i =0; i < Nivel.name.length; i++ ){
-            boards.addAll(getByLevel(action, fase, Nivel.name[i]));
+            boards.add(getByLevel(action, fase, Nivel.name[i]));
         }
-        boards.addAll(getPhaseEventWeek(action, fase));
+        boards.add(getPhaseEventWeek(action, fase));
         return boards;
     }
 
-    private List<DashBoard> getByLevel(String accion ,String fase, String lvl){
-        List<DashBoard> boards = new ArrayList<>();
+    private DashBoard getByLevel(String accion ,String fase, String lvl){
         DashBoard level = new DashBoard();
         List<String> labels = new ArrayList<>();
         Long[] data = new Long[7];
@@ -296,12 +289,10 @@ public class EventService {
         level.setTotal(total);
         level.setData(data);
         level.setLabels(labels);
-        boards.add(level);
-        return boards;
+        return level;
     }
 
-    private List<DashBoard> getPhaseEventWeek(String action,String phase){
-        List<DashBoard> boards = new ArrayList<>();
+    private DashBoard getPhaseEventWeek(String action,String phase){
         DashBoard eventWeek = new DashBoard();
         List<String> events = new ArrayList<>();
         List<String> labels = new ArrayList<>();
@@ -322,18 +313,17 @@ public class EventService {
         eventWeek.setData(data);
         eventWeek.setTotal(total);
         eventWeek.setKey(Key.eventWeek);
-        boards.add(eventWeek);
-        return boards;
+        return eventWeek;
     }
 
 //////////-----
 
     @Async
-    private void getPhaseByAction(String action, String phase, String resource, Table table){
+    private void getPhaseByAction(String action, String phase, Table table){
         List<Evento> eventos = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getByActionWeekResource(action,phase,resource,constants.getINDICE(),constants.getTIME_ZONE());
+            SearchRequest searchRequest = ElasticQuery.getByActionWeekResource(action,phase,constants.getINDICE(),constants.getTIME_ZONE());
             searchRequest.scroll(scroll);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             String scrollId = searchResponse.getScrollId();
@@ -444,6 +434,7 @@ public class EventService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
+
     @Async
     public long countByLevelActionDay(String action, String level){
         try {

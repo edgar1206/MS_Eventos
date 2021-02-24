@@ -21,16 +21,6 @@ class TableTest {
     }
 
     @Test
-    void getRecurso() {
-        table.getRecurso();
-    }
-
-    @Test
-    void setRecurso() {
-        table.setRecurso("prueba");
-    }
-
-    @Test
     void getInfo() {
         table.getInfo();
     }

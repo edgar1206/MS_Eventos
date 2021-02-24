@@ -12,7 +12,7 @@ import java.util.TimeZone;
 
 public class ElasticQuery {
 
-    public static SearchRequest getByActionWeekResource(String action, String phase, String resource, String index, String timeZone){
+    public static SearchRequest getByActionWeekResource(String action, String phase, String index, String timeZone){
         if(action.equalsIgnoreCase("Solicitar Pagos")){
             action = "Solicitar";
         }
@@ -21,7 +21,7 @@ public class ElasticQuery {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventResource",resource));
+        //boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventResource",resource));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + 6 + "d/d")
                 .lte("now-" + 0 + "d/d")
