@@ -6,6 +6,8 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -134,7 +136,45 @@ public class ElasticQuery {
         countRequest.indices(index);
         return countRequest;
     }
+    public static SearchRequest getByActionLevelDayLogs(String action, String phase,String level, String index, String timeZone, String fecha1, String fecha2){
+        if(action==null && phase==null && level==null){
+            SearchRequest searchRequest = new SearchRequest();
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T00:00:00").lte(fecha2+"T23:59:59").timeZone(ElasticQuery.getUtc(timeZone)));
+            sourceBuilder.query(boolQueryBuilder);
+            sourceBuilder.from(0);
+            sourceBuilder.size(10000);
+            searchRequest.source(sourceBuilder);
+            searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+            searchRequest.indices(index);
+            return searchRequest;
 
+        }
+        else
+        {
+            if(phase==null || phase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, fase es nulo o vacio.");
+            if(action==null || action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, accion es nulo o vacio.");
+            if(level==null || level.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, nivel es nulo o vacio");
+            if(!Validator.validateAction(action)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, accion no válida.");
+
+            SearchRequest searchRequest = new SearchRequest();
+            SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+            BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
+            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T00:00:00").lte(fecha2+"T23:59:59").timeZone(ElasticQuery.getUtc(timeZone)));
+            sourceBuilder.query(boolQueryBuilder);
+            sourceBuilder.from(0);
+            sourceBuilder.size(10000);
+            searchRequest.source(sourceBuilder);
+            searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+            searchRequest.indices(index);
+            return searchRequest;
+        }
+
+    }
     public static String getUtc(String timeZone){
         TimeZone zone = TimeZone.getTimeZone(timeZone);
         int horas =  zone.getOffset(Calendar.ZONE_OFFSET)/36000;

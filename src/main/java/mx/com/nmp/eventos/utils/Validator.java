@@ -13,7 +13,7 @@ public class Validator {
         return false;
     }
 
-    public static Boolean validatePhase(String phase) {
+    public static Boolean validateCodigoPhase(String phase) {
         for (int i = 0; i < Accion.codigoFase.length; i++) {
             if (phase.equalsIgnoreCase(Accion.codigoFase[i])) {
                 return true;

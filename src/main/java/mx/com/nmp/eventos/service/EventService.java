@@ -315,6 +315,32 @@ public class EventService {
         eventWeek.setKey(Key.eventWeek);
         return eventWeek;
     }
+    public List<Evento> getFourthLevel(String action, String fase,String nivel,String fecha1, String fecha2){
+        List<Evento> eventos = new ArrayList<>();
+        try {
+            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
+            SearchRequest searchRequest = ElasticQuery.getByActionLevelDayLogs( action, fase,nivel, constants.getINDICE(),constants.getTIME_ZONE(),fecha1, fecha2);
+            searchRequest.scroll(scroll);
+            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+            String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+            addLog(searchHits, eventos);
+            while (searchHits != null && searchHits.length > 1) {
+                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
+                scrollRequest.scroll(scroll);
+                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
+                scrollId = searchResponse.getScrollId();
+                searchHits = searchResponse.getHits().getHits();
+                addLog(searchHits, eventos);
+            }
+
+        } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
+            LOGGER.info("Error: " + ess.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
+        }
+        return eventos;
+    }
+
 
 //////////-----
 

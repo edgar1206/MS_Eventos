@@ -50,10 +50,17 @@ public class EventController {
     @GetMapping(value = "/third_level",params = "fase")
     public List<DashBoard> getThirdLevel(@RequestParam("fase")String fase){
         if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
-        if(Validator.validatePhase(fase)){
+        if(Validator.validateCodigoPhase(fase)){
             return serviceLog.getThirdLevel(Validator.getPhase(fase));
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, fase no válida.");
+    }
+
+    @GetMapping(value = "/fourth_level")
+    public ResponseEntity getFourthLevel(@RequestParam(value="fase", required=false)String fase, @RequestParam(value="accion", required=false)String accion, @RequestParam(value="nivel", required=false)String nivel,@RequestParam(value="fechaDesde", required=true)String fechaDesde,@RequestParam(value="fechaHasta", required=true)String fechaHasta){
+        return new ResponseEntity(serviceLog.getFourthLevel(accion, fase,nivel,fechaDesde,fechaHasta),HttpStatus.OK);
+
+
     }
 
 }
