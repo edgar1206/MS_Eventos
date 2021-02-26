@@ -57,9 +57,8 @@ public class EventController {
     }
 
     @GetMapping(value = "/fourth_level")
-    public ResponseEntity getFourthLevel(@RequestParam(value="fase", required=false)String fase, @RequestParam(value="accion", required=false)String accion, @RequestParam(value="nivel", required=false)String nivel,@RequestParam(value="fechaDesde", required=true)String fechaDesde,@RequestParam(value="fechaHasta", required=true)String fechaHasta){
-        return new ResponseEntity(serviceLog.getFourthLevel(accion, fase,nivel,fechaDesde,fechaHasta),HttpStatus.OK);
-
+    public List<Evento> getFourthLevel(@RequestParam(value="fase", required=false)String fase, @RequestParam(value="accion", required=false)String accion, @RequestParam(value="nivel", required=false)String nivel,@RequestParam(value="fechaDesde", required=true)String fechaDesde,@RequestParam(value="fechaHasta", required=true)String fechaHasta){
+        return serviceLog.getFourthLevel(accion, fase,nivel,fechaDesde,fechaHasta);
 
     }
 

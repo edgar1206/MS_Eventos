@@ -123,6 +123,29 @@ class EventServiceTest {
     }
 
     @Test
+    void getFourthLevelParametros() {
+        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
+        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
+        eventService.getFourthLevel("Autenticar","Token refresh", "error","2020-12-01", "2021-01-25");
+    }
+    @Test
+    void getFourthLevel() {
+        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
+        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
+        eventService.getFourthLevel(null,null, null,"2020-12-01", "2021-01-25");
+    }
+    @Test
+    void getFourthLevelException() {
+        boolean thrown = false;
+        try {
+            eventService.getFourthLevel("Autenticar",null, "error","2020-12-01", "2021-01-25");;
+        } catch (ResponseStatusException e) {
+            thrown = true;
+        }
+        assertTrue(thrown);
+    }
+
+    @Test
     void addEventException(){
         boolean thrown = false;
         try {

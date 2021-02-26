@@ -73,4 +73,10 @@ class EventControllerTest {
         }
         assertTrue(thrown);
     }
+
+    @Test
+    void getFourthLevel() {
+        eventController.getFourthLevel(null,null, null,"2020-12-01", "2021-01-25");
+    }
+
 }

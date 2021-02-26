@@ -5,6 +5,8 @@ import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -156,7 +158,6 @@ public class ElasticQuery {
             if(phase==null || phase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, fase es nulo o vacio.");
             if(action==null || action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, accion es nulo o vacio.");
             if(level==null || level.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, nivel es nulo o vacio");
-            if(!Validator.validateAction(action)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, accion no válida.");
 
             SearchRequest searchRequest = new SearchRequest();
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
@@ -175,6 +176,23 @@ public class ElasticQuery {
         }
 
     }
+    public static SearchRequest groupbyActionandPhase(String index) {
+
+            TermsAggregationBuilder subAggregation = AggregationBuilders.terms("phase")
+                .field("eventPhase.keyword");
+            TermsAggregationBuilder aggregation = AggregationBuilders.terms("action")
+                .field("eventAction.keyword")
+                .subAggregation(subAggregation);
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().aggregation(aggregation);
+        //System.out.println(sourceBuilder);
+       // SearchRequest searchRequest =
+                //new SearchRequest().indices(index).types("article").source(sourceBuilder);
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.indices(index);
+        searchRequest.source(sourceBuilder);
+        return searchRequest;
+
+    }
     public static String getUtc(String timeZone){
         TimeZone zone = TimeZone.getTimeZone(timeZone);
         int horas =  zone.getOffset(Calendar.ZONE_OFFSET)/36000;
@@ -183,5 +201,6 @@ public class ElasticQuery {
         String utc = "-0";
         return utc.concat(zoneId);
     }
+
 
 }

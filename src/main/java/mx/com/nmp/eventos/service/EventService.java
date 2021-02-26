@@ -22,6 +22,8 @@ import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -33,6 +35,8 @@ import java.time.*;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 public class EventService {
@@ -316,7 +320,9 @@ public class EventService {
         return eventWeek;
     }
     public List<Evento> getFourthLevel(String action, String fase,String nivel,String fecha1, String fecha2){
+        System.out.println(action+fase+nivel+fecha1+fecha2);
         List<Evento> eventos = new ArrayList<>();
+
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
             SearchRequest searchRequest = ElasticQuery.getByActionLevelDayLogs( action, fase,nivel, constants.getINDICE(),constants.getTIME_ZONE(),fecha1, fecha2);
@@ -338,6 +344,7 @@ public class EventService {
             LOGGER.info("Error: " + ess.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
+        getFaseAction();
         return eventos;
     }
 
@@ -546,6 +553,49 @@ public class EventService {
         ca1.setMinimalDaysInFirstWeek(1);
         int mes = ca1.get(Calendar.MONTH);
         labels.add(Mes.name[mes]);
+    }
+    public void getFaseAction(){
+        SearchResponse response = null;
+        try {
+            response = restHighLevelClient.search(ElasticQuery.groupbyActionandPhase(constants.getINDICE()), RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Map<String, Aggregation> results = response.getAggregations().asMap();
+        ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
+        System.out.println(((ParsedStringTerms) results.get("action")).getBucketByKey("CRUD tarjetas").getKeyAsString());
+        System.out.println(((ParsedStringTerms) results.get("action")).getMetaData());
+
+        for (Map.Entry<String,Aggregation> entry : results.entrySet()){
+            System.out.println("Key = " + entry.getKey() +
+                    ", Value = " + entry.getValue());
+            /*for (Map.Entry<String,Aggregation> entry2 : entry.getValue()){
+
+            }*/
+        }
+
+
+
+        System.out.println(actions.getBuckets().get(8).getKeyAsString());
+        System.out.println(actions.getBuckets().get(8).getAggregations().getAsMap());
+        System.out.println(actions.getBuckets().get(8).getAggregations().getAsMap().get("phase").getName());
+        System.out.println(actions.getBuckets().get(8).getAggregations());
+        //System.out.println(actions.getBuckets().get(8).getAggregations().get("phase"));
+        List<String> keysAction = actions.getBuckets()
+                .stream()
+                .map(b -> b.getKeyAsString())
+                .collect(toList());
+        List<String> keys = ((ParsedStringTerms) results.get("action")).getBuckets()
+                .stream()
+                .map(b -> b.getKeyAsString())
+                .collect(toList());
+
+
+        System.out.println(keysAction.get(1));
+        //System.out.println(keysPhase.get(1));
+        //System.out.println(keysPhase.get(12));
+        // assertEquals(asList("elasticsearch", "spring data", "search engines", "tutorial"), keys);
     }
 
 }
