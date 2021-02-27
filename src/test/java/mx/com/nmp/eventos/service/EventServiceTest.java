@@ -116,13 +116,6 @@ class EventServiceTest {
     }
 
     @Test
-    void getThirdLevel() {
-        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
-        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        eventService.getThirdLevel("Autenticar");
-    }
-
-    @Test
     void getFourthLevelParametros() {
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");

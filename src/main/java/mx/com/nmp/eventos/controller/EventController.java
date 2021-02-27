@@ -1,6 +1,7 @@
 package mx.com.nmp.eventos.controller;
 
 import mx.com.nmp.eventos.model.nr.Evento;
+import mx.com.nmp.eventos.model.response.Acciones;
 import mx.com.nmp.eventos.model.response.DashBoard;
 import mx.com.nmp.eventos.model.response.SecondLevel;
 import mx.com.nmp.eventos.service.EventService;
@@ -47,19 +48,29 @@ public class EventController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, acción no válida.");
     }
 
-    @GetMapping(value = "/third_level",params = "fase")
-    public List<DashBoard> getThirdLevel(@RequestParam("fase")String fase){
+    @GetMapping(value = "/third_level",params = {"accion","fase"})
+    public List<DashBoard> getThirdLevel(@RequestParam("accion")String accion, @RequestParam("fase")String fase){
         if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
-        if(Validator.validateCodigoPhase(fase)){
-            return serviceLog.getThirdLevel(Validator.getPhase(fase));
+        if(accion.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
+        if(Validator.validateActionPhase(accion,fase)){
+            return serviceLog.getThirdLevel(accion,fase);
         }
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, fase no válida.");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
     }
 
     @GetMapping(value = "/fourth_level")
-    public List<Evento> getFourthLevel(@RequestParam(value="fase", required=false)String fase, @RequestParam(value="accion", required=false)String accion, @RequestParam(value="nivel", required=false)String nivel,@RequestParam(value="fechaDesde", required=true)String fechaDesde,@RequestParam(value="fechaHasta", required=true)String fechaHasta){
+    public List<Evento> getFourthLevel(@RequestParam(value="fase", required=false)String fase, @RequestParam(value="accion", required=false)String accion, @RequestParam(value="nivel", required=false)String nivel, @RequestParam(value="fechaDesde", required=true)String fechaDesde, @RequestParam(value="fechaHasta", required=true)String fechaHasta){
+        if(accion != null && fase != null){
+            if(!Validator.validateActionPhase(accion,fase)){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
+            }
+        }
         return serviceLog.getFourthLevel(accion, fase,nivel,fechaDesde,fechaHasta);
+    }
 
+    @GetMapping(value = "/actions")
+    public Acciones getActionPhase(){
+        return serviceLog.getActionsPhases();
     }
 
 }

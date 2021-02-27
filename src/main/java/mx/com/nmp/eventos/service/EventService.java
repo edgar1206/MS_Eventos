@@ -4,12 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import mx.com.nmp.eventos.model.constant.*;
 import mx.com.nmp.eventos.model.nr.Evento;
-import mx.com.nmp.eventos.model.response.DashBoard;
-import mx.com.nmp.eventos.model.response.SecondLevel;
-import mx.com.nmp.eventos.model.response.Table;
+import mx.com.nmp.eventos.model.response.*;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.utils.ElasticQuery;
-import mx.com.nmp.eventos.utils.Validator;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.search.SearchRequest;
@@ -24,7 +21,9 @@ import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -34,9 +33,6 @@ import java.io.IOException;
 import java.time.*;
 import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 public class EventService {
@@ -56,41 +52,51 @@ public class EventService {
         this.restHighLevelClient = restHighLevelClient;
     }
 
+    public Acciones getActionsPhases(){
+        return AccionFase.accionFase;
+    }
+
+    @Bean
+    public void loadActions(){
+        AccionFase.accionFase = getFaseAction();
+    }
+
     //// Dashboard
 
     public List<DashBoard> getDashboard(){
+        AccionFase.accionFase = getFaseAction();
         List<DashBoard> boards = new ArrayList<>();
-        boards.addAll(getEventAction());
-        boards.addAll(getEventLevel());
-        boards.addAll(getEventWeek());
-        boards.addAll(getEventMonth());
-        boards.addAll(getEventYear());
-        boards.addAll(getEventDayActionLevel());
+        boards.add(getEventAction());
+        boards.add(getEventLevel());
+        boards.add(getEventWeek());
+        boards.add(getEventMonth());
+        //boards.add(getEventYear());
+        boards.add(getEventDayActionLevel());
         return boards;
     }
 
-    private List<DashBoard> getEventAction(){
-        List<DashBoard> boards = new ArrayList<>();
+    @Async
+    private DashBoard getEventAction(){
         DashBoard eventAction = new DashBoard();
-        Long[] data = new Long[Accion.name.length];
+        int actionLength = AccionFase.accionFase.getAcciones().size();
+        Long[] data = new Long[actionLength];
         List<String> labels = new ArrayList<>();
-        for(int i = 0; i < Accion.name.length; i ++){
-            data[i]=countEventActionLastDay(Key.eventAction,Accion.name[i],labels);
+        for(int i = 0; i < actionLength; i ++){
+            data[i]=countEventActionLastDay(Key.eventAction, AccionFase.accionFase.getAcciones().get(i).getNombre(),labels);
         }
         eventAction.setData(data);
         eventAction.setLabels(labels);
         eventAction.setKey(Key.eventAction);
         long total = 0;
-        for (int i = 0; i < Accion.name.length ; i++){
+        for (int i = 0; i < actionLength ; i++){
             total += data[i];
         }
         eventAction.setTotal(total);
-        boards.add(eventAction);
-        return boards;
+        return eventAction;
     }
 
-    private List<DashBoard> getEventLevel(){
-        List<DashBoard> boards = new ArrayList<>();
+    @Async
+    private DashBoard getEventLevel(){
         DashBoard eventLevel = new DashBoard();
         List<String> labels = new ArrayList<>();
         Long[] data = new Long[5];
@@ -107,12 +113,11 @@ public class EventService {
             total += data[i];
         }
         eventLevel.setTotal(total);
-        boards.add(eventLevel);
-        return boards;
+        return eventLevel;
     }
 
-    private List<DashBoard> getEventWeek(){
-        List<DashBoard> boards = new ArrayList<>();
+    @Async
+    private DashBoard getEventWeek(){
         DashBoard eventWeek = new DashBoard();
         List<String> labels = new ArrayList<>();
         Long[] data = new Long[7];
@@ -127,12 +132,11 @@ public class EventService {
             total += data[i];
         }
         eventWeek.setTotal(total);
-        boards.add(eventWeek);
-        return boards;
+        return eventWeek;
     }
 
-    private List<DashBoard> getEventMonth(){
-        List<DashBoard> boards = new ArrayList<>();
+    @Async
+    private DashBoard getEventMonth(){
         DashBoard eventMonth = new DashBoard();
         List<String> labels = new ArrayList<>();
         Long[] data = new Long[4];
@@ -147,23 +151,22 @@ public class EventService {
             total += data[i];
         }
         eventMonth.setTotal(total);
-        boards.add(eventMonth);
-        return boards;
+        return eventMonth;
     }
 
-    private List<DashBoard> getEventYear(){
-        List<DashBoard> boards = new ArrayList<>();
+    private DashBoard getEventYear(){
         DashBoard eventYear = new DashBoard();
         List<String> events = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[Accion.name.length][12];
+        int actionSize = AccionFase.accionFase.getAcciones().size();
+        Long[][] data = new Long[actionSize][12];
         long total = 0;
-        for (int i = 0; i < Accion.name.length; i ++){
+        for (int i = 0; i < actionSize; i ++){
             for(int j = 0; j < 12 ; j ++){
-                data[i][j] = countActionByMonth(Accion.name[i],j);
+                data[i][j] = countActionByMonth(AccionFase.accionFase.getAcciones().get(i).getNombre(),j);
                 total += data[i][j];
             }
-            events.add(Accion.name[i]);
+            events.add(AccionFase.accionFase.getAcciones().get(i).getNombre());
         }
         for(int m = 0; m < 12 ; m ++){
            setMonth(labels,m);
@@ -173,34 +176,33 @@ public class EventService {
         eventYear.setData(data);
         eventYear.setTotal(total);
         eventYear.setKey(Key.eventYear);
-        boards.add(eventYear);
-        return boards;
+        return eventYear;
     }
 
-    private List<DashBoard> getEventDayActionLevel(){
-        List<DashBoard> boards = new ArrayList<>();
+    @Async
+    private DashBoard getEventDayActionLevel(){
         DashBoard eventDayActionLevel = new DashBoard();
         List<String> levels = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[Nivel.name.length][Accion.name.length];
+        int actionLength = AccionFase.accionFase.getAcciones().size();
+        Long[][] data = new Long[Nivel.name.length][actionLength];
         long total = 0;
         for (int i = 0; i < Nivel.name.length; i ++){
-            for(int j = 0; j < Accion.name.length ; j ++){
-                data[i][j] = countByLevelActionDay(Accion.name[j],Nivel.name[i]);
+            for(int j = 0; j < actionLength ; j ++){
+                data[i][j] = countByLevelActionDay(AccionFase.accionFase.getAcciones().get(i).getNombre(),Nivel.name[i]);
                 total += data[i][j];
             }
             levels.add(Nivel.name[i]);
         }
-        for(int m = 0; m < Accion.name.length ; m ++){
-            labels.add(Accion.name[m]);
+        for(int m = 0; m < actionLength ; m ++){
+            labels.add(AccionFase.accionFase.getAcciones().get(m).getNombre());
         }
         eventDayActionLevel.setLabels(labels);
         eventDayActionLevel.setLevels(levels);
         eventDayActionLevel.setData(data);
         eventDayActionLevel.setTotal(total);
         eventDayActionLevel.setKey(Key.eventActionLastDay);
-        boards.add(eventDayActionLevel);
-        return boards;
+        return eventDayActionLevel;
     }
 
     ///  Segundo Nivel
@@ -214,20 +216,7 @@ public class EventService {
 
     private List<Table> getTable(String action){
         List<Table> lista = new ArrayList<>();
-        String[] phase = new String[0]; int tam = 0;
-        for(int i = 0; i < Accion.name.length; i++){
-            if(Accion.name[i].equalsIgnoreCase(action)){
-                phase = Accion.fases[i];
-                tam = phase.length;
-                break;
-            }
-        }
-        for(int i = 0; i < tam; i++){
-            Table table = new Table();
-            table.setFase(phase[i]);
-            getPhaseByAction(action, phase[i], table);
-            lista.add(table);
-        }
+        getPhaseByAction(action, lista);
         return lista;
     }
 
@@ -256,27 +245,12 @@ public class EventService {
 
     ///  Tercer Nivel
 
-    public List<DashBoard> getThirdLevel(String fase){
-        String action = "";
-        if(fase.contains(",")){
-            action = Validator.getAccion(fase);
-            fase = Validator.getFase(fase);
-        }else{
-            for (int i = 0; i < Accion.name.length; i++){
-                for(int j = 0; j < Accion.fases[i].length; j ++){
-                    if (fase.equalsIgnoreCase(Accion.fases[i][j])) {
-                        action = Accion.name[i];
-                        fase = Accion.fases[i][j];
-                        break;
-                    }
-                }
-            }
-        }
+    public List<DashBoard> getThirdLevel(String accion, String fase){
         List<DashBoard> boards = new ArrayList<>();
         for(int i =0; i < Nivel.name.length; i++ ){
-            boards.add(getByLevel(action, fase, Nivel.name[i]));
+            boards.add(getByLevel(accion, fase, Nivel.name[i]));
         }
-        boards.add(getPhaseEventWeek(action, fase));
+        boards.add(getPhaseEventWeek(accion, fase));
         return boards;
     }
 
@@ -319,13 +293,14 @@ public class EventService {
         eventWeek.setKey(Key.eventWeek);
         return eventWeek;
     }
-    public List<Evento> getFourthLevel(String action, String fase,String nivel,String fecha1, String fecha2){
-        System.out.println(action+fase+nivel+fecha1+fecha2);
-        List<Evento> eventos = new ArrayList<>();
 
+    //  Cuarto Nivel
+
+    public List<Evento> getFourthLevel(String accion, String fase, String nivel, String desde, String hasta){
+        List<Evento> eventos = new ArrayList<>();
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getByActionLevelDayLogs( action, fase,nivel, constants.getINDICE(),constants.getTIME_ZONE(),fecha1, fecha2);
+            SearchRequest searchRequest = ElasticQuery.getByActionLevelDayLogs( accion, fase,nivel, constants.getINDICE(),constants.getTIME_ZONE(),desde, hasta);
             searchRequest.scroll(scroll);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             String scrollId = searchResponse.getScrollId();
@@ -339,70 +314,63 @@ public class EventService {
                 searchHits = searchResponse.getHits().getHits();
                 addLog(searchHits, eventos);
             }
-
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("Error: " + ess.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
-        getFaseAction();
         return eventos;
     }
-
 
 //////////-----
 
     @Async
-    private void getPhaseByAction(String action, String phase, Table table){
-        List<Evento> eventos = new ArrayList<>();
+    private void getPhaseByAction(String action, List<Table> lista){
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getByActionWeekResource(action,phase,constants.getINDICE(),constants.getTIME_ZONE());
+            SearchRequest searchRequest = ElasticQuery.getByActionWeek(action,constants.getINDICE(),constants.getTIME_ZONE());
             searchRequest.scroll(scroll);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            String scrollId = searchResponse.getScrollId();
-            SearchHit[] searchHits = searchResponse.getHits().getHits();
-            addLog(searchHits, eventos);
-            while (searchHits != null && searchHits.length > 1) {
+            //String scrollId = searchResponse.getScrollId();
+            //SearchHit[] searchHits = searchResponse.getHits().getHits();
+            //addLog(searchHits, eventos);
+            /*while (searchHits != null && searchHits.length > 1) {
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
                 searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
-                addLog(searchHits, eventos);
+                //addLog(searchHits, eventos);
+            }*/
+            Map<String, Aggregation> results = searchResponse.getAggregations().getAsMap();
+            ParsedStringTerms fases = (ParsedStringTerms) results.get("phase");
+            for (Terms.Bucket fase : fases.getBuckets()) {
+                Table table = new Table();
+                table.setFase(fase.getKeyAsString());
+                ParsedStringTerms levels = (ParsedStringTerms) fase.getAggregations().getAsMap().get("level");
+                for (Terms.Bucket level : levels.getBuckets()) {
+                    if (level.getKeyAsString().equalsIgnoreCase("info")){
+                        table.setInfo(level.getDocCount());
+                    }
+                    else if (level.getKeyAsString().equalsIgnoreCase("error")){
+                        table.setError(level.getDocCount());
+                    }
+                    else if (level.getKeyAsString().equalsIgnoreCase("debug")){
+                        table.setDebug(level.getDocCount());
+                    }
+                    else if (level.getKeyAsString().equalsIgnoreCase("fatal")){
+                        table.setFatal(level.getDocCount());
+                    }
+                    else if (level.getKeyAsString().equalsIgnoreCase("trace")){
+                        table.setTrace(level.getDocCount());
+                    }
+                }
+                lista.add(table);
             }
-
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("Error: " + ess.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
-        final Map<String, Map<String, Long>> result = eventos.stream()
-                .collect(Collectors.groupingBy(Evento::getEventPhase,
-                                Collectors.groupingBy(Evento::getEventLevel,
-                                        Collectors.counting())));
 
-        table.setFase(phase);
-        result.forEach((fase, mapLevel) -> {
-            mapLevel.forEach((level, count) -> {
-                level = level.toUpperCase();
-                switch (level){
-                    case Nivel.INFO:
-                        table.setInfo(count);
-                        break;
-                    case Nivel.ERROR:
-                        table.setError(count);
-                        break;
-                    case Nivel.DEBUG:
-                        table.setDebug(count);
-                        break;
-                    case Nivel.TRACE:
-                        table.setTrace(count);
-                        break;
-                    case Nivel.FATAL:
-                        table.setFatal(count);
-                        break;
-                }
-            });
-        });
     }
 
     @Async
@@ -554,48 +522,34 @@ public class EventService {
         int mes = ca1.get(Calendar.MONTH);
         labels.add(Mes.name[mes]);
     }
-    public void getFaseAction(){
+
+    @Async
+    public Acciones getFaseAction(){
+        Acciones acciones = new Acciones();
         SearchResponse response = null;
         try {
             response = restHighLevelClient.search(ElasticQuery.groupbyActionandPhase(constants.getINDICE()), RequestOptions.DEFAULT);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        Map<String, Aggregation> results = response.getAggregations().asMap();
+        List<Accion> accionList = new ArrayList<>();
+        Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
-        System.out.println(((ParsedStringTerms) results.get("action")).getBucketByKey("CRUD tarjetas").getKeyAsString());
-        System.out.println(((ParsedStringTerms) results.get("action")).getMetaData());
-
-        for (Map.Entry<String,Aggregation> entry : results.entrySet()){
-            System.out.println("Key = " + entry.getKey() +
-                    ", Value = " + entry.getValue());
-            /*for (Map.Entry<String,Aggregation> entry2 : entry.getValue()){
-
-            }*/
+        for (Terms.Bucket action : actions.getBuckets()) {
+            Accion accion = new Accion();
+            accion.setNombre(action.getKeyAsString());
+            List<Fase> fases = new ArrayList<>();
+            ParsedStringTerms phases = (ParsedStringTerms) action.getAggregations().getAsMap().get("phase");
+            for (Terms.Bucket phase : phases.getBuckets()) {
+                Fase fase = new Fase();
+                fase.setNombre(phase.getKeyAsString());
+                fases.add(fase);
+            }
+            accion.setFases(fases);
+            accionList.add(accion);
         }
-
-
-
-        System.out.println(actions.getBuckets().get(8).getKeyAsString());
-        System.out.println(actions.getBuckets().get(8).getAggregations().getAsMap());
-        System.out.println(actions.getBuckets().get(8).getAggregations().getAsMap().get("phase").getName());
-        System.out.println(actions.getBuckets().get(8).getAggregations());
-        //System.out.println(actions.getBuckets().get(8).getAggregations().get("phase"));
-        List<String> keysAction = actions.getBuckets()
-                .stream()
-                .map(b -> b.getKeyAsString())
-                .collect(toList());
-        List<String> keys = ((ParsedStringTerms) results.get("action")).getBuckets()
-                .stream()
-                .map(b -> b.getKeyAsString())
-                .collect(toList());
-
-
-        System.out.println(keysAction.get(1));
-        //System.out.println(keysPhase.get(1));
-        //System.out.println(keysPhase.get(12));
-        // assertEquals(asList("elasticsearch", "spring data", "search engines", "tutorial"), keys);
+        acciones.setAcciones(accionList);
+        return acciones;
     }
 
 }
