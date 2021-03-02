@@ -12,7 +12,7 @@ public class Validator {
 
     public static Boolean validateAction(String action){
         for(int i = 0; i < AccionFase.accionFase.getAcciones().size(); i++){
-            if(action.equalsIgnoreCase(AccionFase.accionFase.getAcciones().get(i).getNombre())){
+            if(action.equals(AccionFase.accionFase.getAcciones().get(i).getNombre())){
                 return true;
             }
         }

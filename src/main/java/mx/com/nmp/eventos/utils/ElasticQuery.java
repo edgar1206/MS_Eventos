@@ -20,7 +20,7 @@ public class ElasticQuery {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
-                .gte("now-" + 60 + "d/d")
+                .gte("now-" + 6 + "d/d")
                 .lte("now-" + 0 + "d/d")
                 .timeZone(getUtc(timeZone)));
         TermsAggregationBuilder subAggregationLevel = AggregationBuilders.terms("level")
@@ -28,9 +28,6 @@ public class ElasticQuery {
         TermsAggregationBuilder subAggregationPhase = AggregationBuilders.terms("phase")
                 .field("eventPhase.keyword")
                 .subAggregation(subAggregationLevel);
-        /*TermsAggregationBuilder aggregationAction = AggregationBuilders.terms("action")
-                .field("eventAction.keyword")
-                .subAggregation(subAggregationPhase);*/
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().aggregation(subAggregationPhase);
         sourceBuilder.query(boolQueryBuilder);
         sourceBuilder.from(0);
@@ -40,23 +37,6 @@ public class ElasticQuery {
         searchRequest.scroll(TimeValue.timeValueMinutes(1L));
         searchRequest.indices(index);
         return searchRequest;
-        /*
-        SearchRequest searchRequest = new SearchRequest();
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
-        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
-                .gte("now-" + 6 + "d/d")
-                .lte("now-" + 0 + "d/d")
-                .timeZone(getUtc(timeZone)));
-        sourceBuilder.query(boolQueryBuilder);
-        sourceBuilder.from(0);
-        sourceBuilder.size(10000);
-        searchRequest.source(sourceBuilder);
-        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
-        searchRequest.indices(index);
-        return searchRequest;*/
     }
 
     public static CountRequest getActionLevelLastDay(String field ,String value, String index, String timeZone){

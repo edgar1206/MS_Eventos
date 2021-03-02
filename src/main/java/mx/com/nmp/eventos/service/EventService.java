@@ -332,17 +332,16 @@ public class EventService {
             SearchRequest searchRequest = ElasticQuery.getByActionWeek(action,constants.getINDICE(),constants.getTIME_ZONE());
             searchRequest.scroll(scroll);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            //String scrollId = searchResponse.getScrollId();
-            //SearchHit[] searchHits = searchResponse.getHits().getHits();
-            //addLog(searchHits, eventos);
-            /*while (searchHits != null && searchHits.length > 1) {
+            /*String scrollId = searchResponse.getScrollId();
+            SearchHit[] searchHits = searchResponse.getHits().getHits();
+            while (searchHits != null && searchHits.length > 1) {
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
                 searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
                 searchHits = searchResponse.getHits().getHits();
-                //addLog(searchHits, eventos);
-            }*/
+            }
+            System.out.println(searchResponse.getHits().getHits().length);*/
             List<Fase> listaFases = getFases(action);
             for (Fase listaFase : listaFases) {
                 Table table = new Table();
