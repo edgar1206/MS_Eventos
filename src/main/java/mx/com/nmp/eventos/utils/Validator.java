@@ -5,6 +5,8 @@ import mx.com.nmp.eventos.model.response.Accion;
 import mx.com.nmp.eventos.model.response.Fase;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -65,6 +67,14 @@ public class Validator {
                 }
             }
         }
+
+        resultado.forEach( accion -> {
+            accion.setNombre(lowerCase(accion.getNombre()));
+            accion.getFases().forEach( fase -> {
+                fase.setNombre(lowerCase(fase.getNombre()));
+            });
+        });
+
         return resultado;
     }
 
@@ -72,6 +82,16 @@ public class Validator {
         return Stream.concat(unique.stream(), duplicates.stream())
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    private static String lowerCase(String nombre){
+        StringBuffer strbf = new StringBuffer();
+        Matcher match = Pattern.compile("(.)(.*)", Pattern.CASE_INSENSITIVE).matcher(nombre);
+        while(match.find())
+        {
+            match.appendReplacement(strbf, match.group(1).toUpperCase() + match.group(2).toLowerCase());
+        }
+        return match.appendTail(strbf).toString();
     }
 
 }
