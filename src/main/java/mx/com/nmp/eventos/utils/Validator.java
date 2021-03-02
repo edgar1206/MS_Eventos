@@ -1,9 +1,12 @@
 package mx.com.nmp.eventos.utils;
 
 import mx.com.nmp.eventos.model.constant.AccionFase;
+import mx.com.nmp.eventos.model.response.Accion;
 import mx.com.nmp.eventos.model.response.Fase;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Validator {
 
@@ -28,6 +31,47 @@ public class Validator {
             }
         }
         return false;
+    }
+
+    public static List<Accion> validateActionPhase(List<Accion> actions){
+
+        List<String> acciones = new ArrayList<>();
+        List<Accion> resultado = new ArrayList<>();
+
+        for (Accion action : actions) {
+            acciones.add(action.getNombre());
+        }
+        List<String> valoresUnicos = acciones
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+
+        Iterator<Accion> iteratorActions = actions.iterator();
+        while (iteratorActions.hasNext()) {
+            Accion accion = iteratorActions.next();
+            if(valoresUnicos.contains(accion.getNombre())){
+                valoresUnicos.remove(accion.getNombre());
+                iteratorActions.remove();
+                resultado.add(accion);
+            }
+        }
+
+        for (Accion accionResultado : resultado) {
+            for (Accion action : actions) {
+                if(accionResultado.getNombre().equals(action.getNombre())){
+                    if(accionResultado.getFases().size() > 0 && action.getFases().size() > 0 ) {
+                        accionResultado.setFases(unifyPhases(accionResultado.getFases(), action.getFases()));
+                    }
+                }
+            }
+        }
+        return resultado;
+    }
+
+    private static List<Fase> unifyPhases(List<Fase> unique, List<Fase> duplicates){
+        return Stream.concat(unique.stream(), duplicates.stream())
+                .distinct()
+                .collect(Collectors.toList());
     }
 
 }

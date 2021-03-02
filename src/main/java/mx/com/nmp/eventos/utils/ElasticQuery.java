@@ -20,7 +20,7 @@ public class ElasticQuery {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
-                .gte("now-" + 6 + "d/d")
+                .gte("now-" + 60 + "d/d")
                 .lte("now-" + 0 + "d/d")
                 .timeZone(getUtc(timeZone)));
         TermsAggregationBuilder subAggregationLevel = AggregationBuilders.terms("level")
@@ -218,6 +218,5 @@ public class ElasticQuery {
         String utc = "-0";
         return utc.concat(zoneId);
     }
-
 
 }

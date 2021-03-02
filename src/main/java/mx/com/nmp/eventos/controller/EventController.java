@@ -48,8 +48,8 @@ public class EventController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, acción no válida.");
     }
 
-    @GetMapping(value = "/third_level",params = {"accion","fase"})
-    public List<DashBoard> getThirdLevel(@RequestParam("accion")String accion, @RequestParam("fase")String fase){
+    @GetMapping(value = "/third_level",params = {"action","phase"})
+    public List<DashBoard> getThirdLevel(@RequestParam("action")String accion, @RequestParam("phase")String fase){
         if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
         if(accion.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
         if(Validator.validateActionPhase(accion,fase)){
@@ -59,7 +59,7 @@ public class EventController {
     }
 
     @GetMapping(value = "/fourth_level")
-    public List<Evento> getFourthLevel(@RequestParam(value="fase", required=false)String fase, @RequestParam(value="accion", required=false)String accion, @RequestParam(value="nivel", required=false)String nivel, @RequestParam(value="fechaDesde", required=true)String fechaDesde, @RequestParam(value="fechaHasta", required=true)String fechaHasta){
+    public List<Evento> getFourthLevel(@RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="from", required=true)String fechaDesde, @RequestParam(value="to", required=true)String fechaHasta){
         if(accion != null && fase != null){
             if(!Validator.validateActionPhase(accion,fase)){
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");

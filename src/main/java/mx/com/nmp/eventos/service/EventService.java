@@ -7,6 +7,7 @@ import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.*;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.utils.ElasticQuery;
+import mx.com.nmp.eventos.utils.Validator;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.search.SearchRequest;
@@ -70,7 +71,7 @@ public class EventService {
         boards.add(getEventLevel());
         boards.add(getEventWeek());
         boards.add(getEventMonth());
-        //boards.add(getEventYear());
+        boards.add(getEventYear());
         boards.add(getEventDayActionLevel());
         return boards;
     }
@@ -154,21 +155,22 @@ public class EventService {
         return eventMonth;
     }
 
+    @Async
     private DashBoard getEventYear(){
         DashBoard eventYear = new DashBoard();
         List<String> events = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         int actionSize = AccionFase.accionFase.getAcciones().size();
-        Long[][] data = new Long[actionSize][12];
+        Long[][] data = new Long[actionSize][3];
         long total = 0;
         for (int i = 0; i < actionSize; i ++){
-            for(int j = 0; j < 12 ; j ++){
+            for(int j = 0; j < 3 ; j ++){
                 data[i][j] = countActionByMonth(AccionFase.accionFase.getAcciones().get(i).getNombre(),j);
                 total += data[i][j];
             }
             events.add(AccionFase.accionFase.getAcciones().get(i).getNombre());
         }
-        for(int m = 0; m < 12 ; m ++){
+        for(int m = 0; m < 3 ; m ++){
            setMonth(labels,m);
         }
         eventYear.setLabels(labels);
@@ -341,36 +343,38 @@ public class EventService {
                 searchHits = searchResponse.getHits().getHits();
                 //addLog(searchHits, eventos);
             }*/
+            List<Fase> listaFases = getFases(action);
+            for (Fase listaFase : listaFases) {
+                Table table = new Table();
+                table.setFase(listaFase.getNombre());
+                lista.add(table);
+            }
             Map<String, Aggregation> results = searchResponse.getAggregations().getAsMap();
             ParsedStringTerms fases = (ParsedStringTerms) results.get("phase");
             for (Terms.Bucket fase : fases.getBuckets()) {
-                Table table = new Table();
-                table.setFase(fase.getKeyAsString());
-                ParsedStringTerms levels = (ParsedStringTerms) fase.getAggregations().getAsMap().get("level");
-                for (Terms.Bucket level : levels.getBuckets()) {
-                    if (level.getKeyAsString().equalsIgnoreCase("info")){
-                        table.setInfo(level.getDocCount());
-                    }
-                    else if (level.getKeyAsString().equalsIgnoreCase("error")){
-                        table.setError(level.getDocCount());
-                    }
-                    else if (level.getKeyAsString().equalsIgnoreCase("debug")){
-                        table.setDebug(level.getDocCount());
-                    }
-                    else if (level.getKeyAsString().equalsIgnoreCase("fatal")){
-                        table.setFatal(level.getDocCount());
-                    }
-                    else if (level.getKeyAsString().equalsIgnoreCase("trace")){
-                        table.setTrace(level.getDocCount());
+                for(Table table : lista) {
+                    if(table.getFase().equals(fase.getKeyAsString())) {
+                        ParsedStringTerms levels = (ParsedStringTerms) fase.getAggregations().getAsMap().get("level");
+                        for (Terms.Bucket level : levels.getBuckets()) {
+                            if (level.getKeyAsString().equalsIgnoreCase("info")) {
+                                table.setInfo(level.getDocCount());
+                            } else if (level.getKeyAsString().equalsIgnoreCase("error")) {
+                                table.setError(level.getDocCount());
+                            } else if (level.getKeyAsString().equalsIgnoreCase("debug")) {
+                                table.setDebug(level.getDocCount());
+                            } else if (level.getKeyAsString().equalsIgnoreCase("fatal")) {
+                                table.setFatal(level.getDocCount());
+                            } else if (level.getKeyAsString().equalsIgnoreCase("trace")) {
+                                table.setTrace(level.getDocCount());
+                            }
+                        }
                     }
                 }
-                lista.add(table);
             }
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("Error: " + ess.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
-
     }
 
     @Async
@@ -530,26 +534,41 @@ public class EventService {
         try {
             response = restHighLevelClient.search(ElasticQuery.groupbyActionandPhase(constants.getINDICE()), RequestOptions.DEFAULT);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.info("Error: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         List<Accion> accionList = new ArrayList<>();
         Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
         for (Terms.Bucket action : actions.getBuckets()) {
             Accion accion = new Accion();
-            accion.setNombre(action.getKeyAsString());
+            accion.setNombre(action.getKeyAsString().toUpperCase());//--
             List<Fase> fases = new ArrayList<>();
             ParsedStringTerms phases = (ParsedStringTerms) action.getAggregations().getAsMap().get("phase");
             for (Terms.Bucket phase : phases.getBuckets()) {
                 Fase fase = new Fase();
-                fase.setNombre(phase.getKeyAsString());
+                fase.setNombre(phase.getKeyAsString().toUpperCase());//--
                 fases.add(fase);
             }
             accion.setFases(fases);
             accionList.add(accion);
         }
+
+        accionList = Validator.validateActionPhase(accionList);//
+
         acciones.setAcciones(accionList);
+
         return acciones;
+    }
+
+    private List<Fase> getFases(String action){
+        List<Fase> fases = new ArrayList<>();
+        for (int i = 0; i < AccionFase.accionFase.getAcciones().size(); i++ ){
+            if(AccionFase.accionFase.getAcciones().get(i).getNombre().equals(action)){
+                fases = AccionFase.accionFase.getAcciones().get(i).getFases();
+            }
+        }
+        return fases;
     }
 
 }
