@@ -1,6 +1,5 @@
 package mx.com.nmp.eventos.controller;
 
-import mx.com.nmp.eventos.model.constant.AccionFase;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.Acciones;
 import mx.com.nmp.eventos.model.response.DashBoard;
@@ -60,13 +59,13 @@ public class EventController {
     }
 
     @GetMapping(value = "/fourth_level")
-    public List<Evento> getFourthLevel(@RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="from", required=true)String fechaDesde, @RequestParam(value="to", required=true)String fechaHasta){
+    public List<Evento> getFourthLevel(@RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="date", required=true)String fecha){
         if(accion != null && fase != null){
             if(!Validator.validateActionPhase(accion,fase)){
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
             }
         }
-        return serviceLog.getFourthLevel(accion, fase,nivel,fechaDesde,fechaHasta);
+        return serviceLog.getFourthLevel(accion, fase,nivel,fecha,fecha);
     }
 
     @GetMapping(value = "/actions")

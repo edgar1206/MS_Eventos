@@ -3,6 +3,7 @@ package mx.com.nmp.eventos.controller;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.SecondLevel;
 import mx.com.nmp.eventos.service.EventService;
+import mx.com.nmp.eventos.utils.Validator;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,12 +23,16 @@ class EventControllerTest {
 
     @Mock
     private EventService eventService;
+    @Mock
+    private Validator validator;
+    //private AccionFase accionFase;
+
+    private EventService eventServiceAcciones;
 
     @BeforeEach
-    void setUp() {
-
+    void setUp(){
+        eventService.loadActions();
     }
-
     @Test
     void addEvent() {
         Evento evento = new Evento();
@@ -43,8 +48,17 @@ class EventControllerTest {
 
     @Test
     void getSecondLevel() {
+       /* Accion accion= new Accion();
+        accion.setNombre("Registro");
+        Fase fase = new Fase();
+        fase.setNombre("Validar datos");
+        List<Accion> accionList= new ArrayList<>();
+        List<Fase> faseList= new ArrayList<>();
+        accion.setFases(faseList);
+        accionList.add(accion);*/
         SecondLevel secondLevel = new SecondLevel();
         Mockito.when(eventService.getSecondLevel("Registro")).thenReturn(secondLevel);
+        Mockito.when(validator.validateAction("Registro")).thenReturn(true);
         Assertions.assertEquals(secondLevel,eventController.getSecondLevel("Registro"));
     }
     @Test
@@ -57,26 +71,26 @@ class EventControllerTest {
         }
         assertTrue(thrown);
     }
-/*
+
     @Test
     void getThirdLevel() {
-        Assertions.assertNotNull(eventController.getThirdLevel("AutenticarLogin"));
+        Assertions.assertNotNull(eventController.getThirdLevel("Login","Initiate auth"));
 
     }
     @Test
     void getThirdLevelException() {
         boolean thrown = false;
         try {
-            eventController.getThirdLevel("Autenticar");
+            eventController.getThirdLevel("Login","Initiate authh");
         } catch (ResponseStatusException e) {
             thrown = true;
         }
         assertTrue(thrown);
     }
-*/
+
     @Test
     void getFourthLevel() {
-        eventController.getFourthLevel(null,null, null,"2020-12-01", "2021-01-25");
+        eventController.getFourthLevel(null,null, null,"2020-12-01");
     }
 
 }
