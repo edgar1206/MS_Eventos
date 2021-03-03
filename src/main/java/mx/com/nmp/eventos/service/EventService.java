@@ -538,14 +538,5 @@ public class EventService {
         return acciones;
     }
 
-    private List<Fase> getFases(String action){
-        List<Fase> fases = new ArrayList<>();
-        for (int i = 0; i < AccionFase.accionFase.getAcciones().size(); i++ ){
-            if(AccionFase.accionFase.getAcciones().get(i).getNombre().equals(action)){
-                fases = AccionFase.accionFase.getAcciones().get(i).getFases();
-            }
-        }
-        return fases;
-    }
 
 }

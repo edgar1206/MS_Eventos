@@ -85,6 +85,7 @@ public class Validator {
     }
 
     private static String lowerCase(String nombre){
+        nombre = nombre.trim();
         StringBuffer strbf = new StringBuffer();
         Matcher match = Pattern.compile("(.)(.*)", Pattern.CASE_INSENSITIVE).matcher(nombre);
         while(match.find())
