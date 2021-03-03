@@ -1,5 +1,6 @@
 package mx.com.nmp.eventos.controller;
 
+import mx.com.nmp.eventos.model.constant.AccionFase;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.Acciones;
 import mx.com.nmp.eventos.model.response.DashBoard;

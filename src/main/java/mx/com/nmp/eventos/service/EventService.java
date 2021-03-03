@@ -218,7 +218,23 @@ public class EventService {
 
     private List<Table> getTable(String action){
         List<Table> lista = new ArrayList<>();
-        getPhaseByAction(action, lista);
+        Accion accion = new Accion();
+        for (Accion nodoAccion : AccionFase.accionFase.getAcciones()) {
+            if(nodoAccion.getNombre().equals(action))
+                accion = nodoAccion;
+        }
+        accion.getFases().stream().parallel().forEach(fase -> {
+                Table table = new Table();
+                table.setFase(fase.getNombre());
+                for (int i = 0; i < 7; i ++){
+                    table.setInfo(getPhaseByAction(action,fase.getNombre(),Nivel.INFO,String.valueOf(i)));
+                    table.setError(getPhaseByAction(action,fase.getNombre(),Nivel.ERROR,String.valueOf(i)));
+                    table.setDebug(getPhaseByAction(action,fase.getNombre(),Nivel.DEBUG,String.valueOf(i)));
+                    table.setTrace(getPhaseByAction(action,fase.getNombre(),Nivel.TRACE,String.valueOf(i)));
+                    table.setFatal(getPhaseByAction(action,fase.getNombre(),Nivel.FATAL,String.valueOf(i)));
+                }
+                lista.add(table);
+            });
         return lista;
     }
 
@@ -326,51 +342,13 @@ public class EventService {
 //////////-----
 
     @Async
-    private void getPhaseByAction(String action, List<Table> lista){
+    private long getPhaseByAction(String action,String phase,String level,String day){
         try {
-            final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getByActionWeek(action,constants.getINDICE(),constants.getTIME_ZONE());
-            searchRequest.scroll(scroll);
-            SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            /*String scrollId = searchResponse.getScrollId();
-            SearchHit[] searchHits = searchResponse.getHits().getHits();
-            while (searchHits != null && searchHits.length > 1) {
-                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-                scrollRequest.scroll(scroll);
-                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
-                scrollId = searchResponse.getScrollId();
-                searchHits = searchResponse.getHits().getHits();
-            }
-            System.out.println(searchResponse.getHits().getHits().length);*/
-            List<Fase> listaFases = getFases(action);
-            for (Fase listaFase : listaFases) {
-                Table table = new Table();
-                table.setFase(listaFase.getNombre());
-                lista.add(table);
-            }
-            Map<String, Aggregation> results = searchResponse.getAggregations().getAsMap();
-            ParsedStringTerms fases = (ParsedStringTerms) results.get("phase");
-            for (Terms.Bucket fase : fases.getBuckets()) {
-                for(Table table : lista) {
-                    if(table.getFase().equals(fase.getKeyAsString())) {
-                        ParsedStringTerms levels = (ParsedStringTerms) fase.getAggregations().getAsMap().get("level");
-                        for (Terms.Bucket level : levels.getBuckets()) {
-                            if (level.getKeyAsString().equalsIgnoreCase("info")) {
-                                table.setInfo(level.getDocCount());
-                            } else if (level.getKeyAsString().equalsIgnoreCase("error")) {
-                                table.setError(level.getDocCount());
-                            } else if (level.getKeyAsString().equalsIgnoreCase("debug")) {
-                                table.setDebug(level.getDocCount());
-                            } else if (level.getKeyAsString().equalsIgnoreCase("fatal")) {
-                                table.setFatal(level.getDocCount());
-                            } else if (level.getKeyAsString().equalsIgnoreCase("trace")) {
-                                table.setTrace(level.getDocCount());
-                            }
-                        }
-                    }
-                }
-            }
+            CountRequest countRequest = ElasticQuery.getByActionWeek(action,phase,level,day,constants.getINDICE(),constants.getTIME_ZONE());
+            CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
+            return countResponse.getCount();
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
+            ess.printStackTrace();
             LOGGER.info("Error: " + ess.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }

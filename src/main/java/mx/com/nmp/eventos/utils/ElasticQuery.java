@@ -16,12 +16,12 @@ import java.util.TimeZone;
 
 public class ElasticQuery {
 
-    public static SearchRequest getByActionWeek(String action, String index, String timeZone){
-        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+    public static CountRequest getByActionWeek(String action, String phase, String level, String day, String index, String timeZone){
+        /*BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
-                .gte("now-" + 6 + "d/d")
-                .lte("now-" + 0 + "d/d")
+                .gte("now-" + 40 + "d/d")
+                .lte("now-" + 40 + "d/d")
                 .timeZone(getUtc(timeZone)));
         TermsAggregationBuilder subAggregationLevel = AggregationBuilders.terms("level")
                 .field("eventLevel.keyword");
@@ -36,7 +36,18 @@ public class ElasticQuery {
         searchRequest.source(sourceBuilder);
         searchRequest.scroll(TimeValue.timeValueMinutes(1L));
         searchRequest.indices(index);
-        return searchRequest;
+        return searchRequest;*/
+        CountRequest countRequest = new CountRequest();
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte("now-" + day + "d/d").lte("now-" + day + "d/d").timeZone(ElasticQuery.getUtc(timeZone)));
+        searchSourceBuilder.query(boolQueryBuilder);
+        countRequest.indices(index);
+        countRequest.source(searchSourceBuilder);
+        return countRequest;
     }
 
     public static CountRequest getActionLevelLastDay(String field ,String value, String index, String timeZone){
