@@ -17,26 +17,6 @@ import java.util.TimeZone;
 public class ElasticQuery {
 
     public static CountRequest getByActionWeek(String action, String phase, String level, String day, String index, String timeZone){
-        /*BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
-        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
-                .gte("now-" + 40 + "d/d")
-                .lte("now-" + 40 + "d/d")
-                .timeZone(getUtc(timeZone)));
-        TermsAggregationBuilder subAggregationLevel = AggregationBuilders.terms("level")
-                .field("eventLevel.keyword");
-        TermsAggregationBuilder subAggregationPhase = AggregationBuilders.terms("phase")
-                .field("eventPhase.keyword")
-                .subAggregation(subAggregationLevel);
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().aggregation(subAggregationPhase);
-        sourceBuilder.query(boolQueryBuilder);
-        sourceBuilder.from(0);
-        sourceBuilder.size(10000);
-        SearchRequest searchRequest = new SearchRequest();
-        searchRequest.source(sourceBuilder);
-        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
-        searchRequest.indices(index);
-        return searchRequest;*/
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();

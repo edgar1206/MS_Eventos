@@ -53,12 +53,6 @@ public class EventControllerTest {
         when( serviceLog.getThirdLevel("Login", "Autenticar")).thenReturn(dashBoards);
         eventController.getThirdLevel("Login","Autenticar");
     }
-  /*  @Test
-    public void getFourthLevelParemetros(){
-        List<Evento> eventos = new ArrayList<>();
-        when(eventController.getFourthLevel("Autenticar","Login","error", "2021-01-22")).thenReturn(eventos);
-        serviceLog.getFourthLevel("Login", "Autenticar","error", "2021-01-22","2021-01-22");
-    }*/
   @Test
   public void getFourthLevelParemetros(){
       List<Evento> eventos = new ArrayList<>();
@@ -77,12 +71,6 @@ public class EventControllerTest {
         Evento evento = new Evento();
         eventController.addEvent(evento);
     }
-  /*  @Test
-    public void getFourthLevel(){
-        List<Evento> eventos = new ArrayList<>();
-        when(eventController.getFourthLevel(null,null,null, "2021-01-22")).thenReturn(eventos);
-        serviceLog.getThirdLevel("Login", "Autenticar");
-    }*/
 
     private void cargaAccionFase(){
         String json = "{\n" +
