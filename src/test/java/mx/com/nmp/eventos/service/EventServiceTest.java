@@ -1,8 +1,11 @@
 package mx.com.nmp.eventos.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import mx.com.nmp.eventos.model.constant.AccionFase;
 import mx.com.nmp.eventos.model.constant.Constants;
 import mx.com.nmp.eventos.model.nr.Evento;
+import mx.com.nmp.eventos.model.response.Acciones;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RestClient;
@@ -110,9 +113,10 @@ class EventServiceTest {
 
     @Test
     void getSecondLevel()  {
+        cargaAccionFase();
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        eventService.loadActions();
+        //eventService.loadActions();
         eventService.getSecondLevel("Login");
     }
     @Test
@@ -163,5 +167,134 @@ class EventServiceTest {
     }
      private static <T> void insertGeneric(T clazz, RestHighLevelClient client, String id) throws IOException{
         IndexRequest indexRequest = new IndexRequest("smnr_mimonte_eventos", "doc", id).source(transformerObject(clazz));
+    }
+    private void cargaAccionFase(){
+        String json = "{\n" +
+                "    \"acciones\": [\n" +
+                "        {\n" +
+                "            \"nombre\": \"Login\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Initiate auth\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Usuario monte\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Autenticar\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Boletas\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Obtener créditos\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Contratos por folio\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Desacarga ticket\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Registro\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Validar datos\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar reinicio contraseña\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Registrar nueva contraseña\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar activación token\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar alta cuenta\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Validar medio contacto\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar reinicio contraseña oauth\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Registrar nueva contraseña oauth\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Token oauth\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Crud tarjetas\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Consulta tarjeta\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Eliminar tarjeta\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Edición tarjeta\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Movimientos\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Descarga\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Consulta\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Token refresh\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Autenticar\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Solicitar pagos\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Realizar pago\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Finalizar transacción\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Openpay read customer list from merchant - lista vacia\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Registro tarjeta\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Campaña\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Getcampaign\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}";
+        Gson gson = new Gson();
+        Acciones acciones = gson.fromJson(json, Acciones.class);
+        AccionFase.setAccionFase(acciones);
     }
 }

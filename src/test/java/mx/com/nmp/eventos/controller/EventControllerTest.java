@@ -2,6 +2,7 @@ package mx.com.nmp.eventos.controller;
 
 import com.google.gson.Gson;
 import mx.com.nmp.eventos.model.constant.AccionFase;
+import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.Acciones;
 import mx.com.nmp.eventos.model.response.DashBoard;
 import mx.com.nmp.eventos.model.response.SecondLevel;
@@ -49,9 +50,39 @@ public class EventControllerTest {
     @Test
     public void getThirdLevel(){
         List<DashBoard> dashBoards = new ArrayList<>();
-        when(eventController.getThirdLevel("Login","Autenticar")).thenReturn(dashBoards);
-        serviceLog.getThirdLevel("Login", "Autenticar");
+        when( serviceLog.getThirdLevel("Login", "Autenticar")).thenReturn(dashBoards);
+        eventController.getThirdLevel("Login","Autenticar");
     }
+  /*  @Test
+    public void getFourthLevelParemetros(){
+        List<Evento> eventos = new ArrayList<>();
+        when(eventController.getFourthLevel("Autenticar","Login","error", "2021-01-22")).thenReturn(eventos);
+        serviceLog.getFourthLevel("Login", "Autenticar","error", "2021-01-22","2021-01-22");
+    }*/
+  @Test
+  public void getFourthLevelParemetros(){
+      List<Evento> eventos = new ArrayList<>();
+      when(serviceLog.getFourthLevel("Login", "Autenticar","error", "2021-01-22","2021-01-22")).thenReturn(eventos);
+      eventController.getFourthLevel("Autenticar","Login","error", "2021-01-22");
+
+  }
+    @Test
+    public void getActions(){
+      Acciones acciones = new Acciones();
+      when(serviceLog.getActionsPhases()).thenReturn(acciones);
+        eventController.getActionPhase();
+    }
+    @Test
+    public void addEvento(){
+        Evento evento = new Evento();
+        eventController.addEvent(evento);
+    }
+  /*  @Test
+    public void getFourthLevel(){
+        List<Evento> eventos = new ArrayList<>();
+        when(eventController.getFourthLevel(null,null,null, "2021-01-22")).thenReturn(eventos);
+        serviceLog.getThirdLevel("Login", "Autenticar");
+    }*/
 
     private void cargaAccionFase(){
         String json = "{\n" +
