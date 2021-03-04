@@ -112,9 +112,6 @@ public class ElasticQuery {
     }
 
     public static CountRequest getByActionLevelDay(int dia, String action, String level, String index, String timeZone){
-        if(action.equalsIgnoreCase("Solicitar Pagos")){
-            action = "Solicitar";
-        }
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
@@ -130,12 +127,13 @@ public class ElasticQuery {
         return countRequest;
     }
 
-    public static SearchRequest getByActionLevelDayLogs(String action, String phase,String level, String index, String timeZone, String fecha1, String fecha2){
+    public static SearchRequest getByActionLevelDayLogs(String action, String phase,String level, String index, String timeZone, String fecha1, String fecha2, String inicio, String fin){
+
         if(action==null && phase==null && level==null){
             SearchRequest searchRequest = new SearchRequest();
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T00:00:00").lte(fecha2+"T23:59:59").timeZone(ElasticQuery.getUtc(timeZone)));
+            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T"+inicio+":00:00").lte(fecha2+"T"+fin+":59:59").timeZone(ElasticQuery.getUtc(timeZone)));
             sourceBuilder.query(boolQueryBuilder);
             sourceBuilder.from(0);
             sourceBuilder.size(10000);
@@ -157,7 +155,7 @@ public class ElasticQuery {
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
-            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T00:00:00").lte(fecha2+"T23:59:59").timeZone(ElasticQuery.getUtc(timeZone)));
+            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T"+inicio+":00:00").lte(fecha2+"T"+inicio+":59:59").timeZone(ElasticQuery.getUtc(timeZone)));
             sourceBuilder.query(boolQueryBuilder);
             sourceBuilder.from(0);
             sourceBuilder.size(10000);

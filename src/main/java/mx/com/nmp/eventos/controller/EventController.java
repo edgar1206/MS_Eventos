@@ -65,7 +65,7 @@ public class EventController {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
             }
         }
-        return serviceLog.getFourthLevel(accion, fase,nivel,fecha,fecha);
+        return serviceLog.getFourthLevel(accion,fase,nivel,fecha,fecha);
     }
 
     @GetMapping(value = "/actions")

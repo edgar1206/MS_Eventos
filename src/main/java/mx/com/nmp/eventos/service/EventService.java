@@ -33,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @Service
@@ -48,6 +49,9 @@ public class EventService {
 
     @Autowired
     private Constants constants;
+
+    public EventService() {
+    }
 
     public void setRestHighLevelClient(RestHighLevelClient restHighLevelClient) {
         this.restHighLevelClient = restHighLevelClient;
@@ -316,30 +320,50 @@ public class EventService {
 
     public List<Evento> getFourthLevel(String accion, String fase, String nivel, String desde, String hasta){
         List<Evento> eventos = new ArrayList<>();
+        List<String> horas = new ArrayList<>();
+        horas.add("00");
+        horas.add("02");
+        horas.add("04");
+        horas.add("06");
+        horas.add("08");
+        horas.add("10");
+        horas.add("12");
+        horas.add("14");
+        horas.add("16");
+        horas.add("18");
+        horas.add("20");
+        horas.add("22");
+        long incia = System.currentTimeMillis();
+        horas.stream().parallel().forEach(hora -> {
+            String horaFin = String.format("%02d",Integer.parseInt(hora) + 1);
+            eventos.addAll(getEventsByDate(accion, fase, nivel, desde, hasta, hora, horaFin));
+        });
+        long termina = System.currentTimeMillis();
+        System.out.println(eventos.size() + "  tiempo total: " + TimeUnit.MILLISECONDS.toSeconds(termina - incia) + " segundos");
+        return eventos;
+    }
+
+//////////-----
+
+    private List<Evento> getEventsByDate(String accion, String fase, String nivel, String desde, String hasta, String inicio, String fin){
+        List<Evento> eventos = new ArrayList<>();
+        int total = 0;
         try {
             final Scroll scroll = new Scroll(TimeValue.timeValueMinutes(1L));
-            SearchRequest searchRequest = ElasticQuery.getByActionLevelDayLogs( accion, fase,nivel, constants.getINDICE(),constants.getTIME_ZONE(),desde, hasta);
+            SearchRequest searchRequest = ElasticQuery.getByActionLevelDayLogs(accion, fase, nivel, constants.getINDICE(),constants.getTIME_ZONE(),desde, hasta, inicio, fin);
             searchRequest.scroll(scroll);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
             String scrollId = searchResponse.getScrollId();
             SearchHit[] searchHits = searchResponse.getHits().getHits();
+            total += searchHits.length;
             addLog(searchHits, eventos);
-            while (searchHits != null && searchHits.length > 1) {
-                SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
-                scrollRequest.scroll(scroll);
-                searchResponse = restHighLevelClient.scroll(scrollRequest, RequestOptions.DEFAULT);
-                scrollId = searchResponse.getScrollId();
-                searchHits = searchResponse.getHits().getHits();
-                addLog(searchHits, eventos);
-            }
+            System.out.println(total);
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
             LOGGER.info("Error: " + ess.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ess.getMessage());
         }
         return eventos;
     }
-
-//////////-----
 
     @Async
     private long getPhaseByAction(String action,String phase,String level,String day){
@@ -458,7 +482,7 @@ public class EventService {
 
     public void addEvent(Evento evento) {
         try{
-            repositoryLog.save(evento);
+            this.repositoryLog.save(evento);
         }catch (Exception e){
             LOGGER.info( "Error: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
