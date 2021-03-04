@@ -1,122 +1,186 @@
 package mx.com.nmp.eventos.controller;
 
+import com.google.gson.Gson;
 import mx.com.nmp.eventos.model.constant.AccionFase;
-import mx.com.nmp.eventos.model.constant.Constants;
-import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.Acciones;
+import mx.com.nmp.eventos.model.response.DashBoard;
 import mx.com.nmp.eventos.model.response.SecondLevel;
 import mx.com.nmp.eventos.service.EventService;
-import mx.com.nmp.eventos.utils.Validator;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.List;
 
-@ExtendWith(MockitoExtension.class)
-class EventControllerTest {
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
+public class EventControllerTest {
+
     @InjectMocks
     private EventController eventController;
 
     @Mock
-    private EventService eventService;
-    @Mock
-    private Constants constants;
+    private EventService serviceLog;
 
-    private Validator validator;
-    @Mock
-    private AccionFase accionFase;
-
-
-    private EventService eventServiceAcciones;
-    @Mock
-    private Acciones acciones;
-
-
-    /*@BeforeEach
-    void setUp(){
-        eventService.loadActions();
-    }*/
-    @Test
-    void addEvent() {
-        Evento evento = new Evento();
-        evento.setIdEvent("1");
-        eventController.addEvent(evento);
+    @Before
+    public void setUp(){
+        cargaAccionFase();
     }
 
     @Test
-    void getDashboard() {
-        Assertions.assertNotNull(eventController.getDashboard());
-
+    public void getDashboard() {
+        List<DashBoard> dashBoards = new ArrayList<>();
+        when(serviceLog.getDashboard()).thenReturn(dashBoards);
+        eventController.getDashboard();
     }
 
     @Test
-    void getSecondLevel() {
-
-      /*  Accion accion= new Accion();
-        accion.setNombre("Registro");
-        Fase fase = new Fase();
-        fase.setNombre("Validar datos");
-        List<Accion> accionList= new ArrayList<>();
-        List<Fase> faseList= new ArrayList<>();
-        accion.setFases(faseList);
-        accionList.add(accion);*/ //esto no se usa
-
+    public void getSecondLevel(){
         SecondLevel secondLevel = new SecondLevel();
-        Mockito.when(eventService.getSecondLevel("Registro")).thenReturn(secondLevel);
-       // Mockito.when(validator.validateAction("Registro")).thenReturn(true);
-        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
-        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-       // Mockito.when(accionFase.accionFase.getAcciones()).thenReturn(accionList);
-       //Mockito.when(acciones.getAcciones()).thenReturn(accionList);
-     /*  try(MockedStatic<Acciones> mockedStatic=Mockito.mockStatic(Acciones.class)){
-           mockedStatic.when(Acciones::getAcciones).thenReturn(accionList);
-       }*/
-      /*  try(MockedStatic<AccionFase> mockedStatic=Mockito.mockStatic(AccionFase.class)){
-           mockedStatic.when(AccionFase::accionFase).thenReturn(accionList);
-       }*/
-      /*   try(MockedStatic<Validator> mockedStatic=Mockito.mockStatic(Validator.class)){
-           mockedStatic.when(Validator::validateAction("434")).thenReturn(true);
-       }*/
-        //eventService.loadActions();
-
-        Assertions.assertEquals(secondLevel,eventController.getSecondLevel("Login"));
-    }
-    @Test
-    void getSecondLevelException() {
-        boolean thrown = false;
-        try {
-            eventController.getSecondLevel("Registroo");
-        } catch (ResponseStatusException e) {
-            thrown = true;
-        }
-        assertTrue(thrown);
+        when(serviceLog.getSecondLevel("Login")).thenReturn(secondLevel);
+        eventController.getSecondLevel("Login");
     }
 
     @Test
-    void getThirdLevel() {
-        Assertions.assertNotNull(eventController.getThirdLevel("Login","Usuario Monte"));
-
-    }
-    @Test
-    void getThirdLevelException() {
-        boolean thrown = false;
-        try {
-            eventController.getThirdLevel("Login","Initiate authh");
-        } catch (ResponseStatusException e) {
-            thrown = true;
-        }
-        assertTrue(thrown);
+    public void getThirdLevel(){
+        List<DashBoard> dashBoards = new ArrayList<>();
+        when(eventController.getThirdLevel("Login","Autenticar")).thenReturn(dashBoards);
+        serviceLog.getThirdLevel("Login", "Autenticar");
     }
 
-    @Test
-    void getFourthLevel() {
-        eventController.getFourthLevel(null,null, null,"2020-12-01");
+    private void cargaAccionFase(){
+        String json = "{\n" +
+                "    \"acciones\": [\n" +
+                "        {\n" +
+                "            \"nombre\": \"Login\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Initiate auth\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Usuario monte\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Autenticar\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Boletas\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Obtener créditos\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Contratos por folio\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Desacarga ticket\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Registro\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Validar datos\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar reinicio contraseña\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Registrar nueva contraseña\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar activación token\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar alta cuenta\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Validar medio contacto\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Solicitar reinicio contraseña oauth\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Registrar nueva contraseña oauth\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Token oauth\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Crud tarjetas\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Consulta tarjeta\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Eliminar tarjeta\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Edición tarjeta\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Movimientos\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Descarga\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Consulta\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Token refresh\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Autenticar\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Solicitar pagos\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Realizar pago\"\n" +
+                "                },\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Finalizar transacción\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Openpay read customer list from merchant - lista vacia\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Registro tarjeta\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"nombre\": \"Campaña\",\n" +
+                "            \"fases\": [\n" +
+                "                {\n" +
+                "                    \"nombre\": \"Getcampaign\"\n" +
+                "                }\n" +
+                "            ]\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}";
+        Gson gson = new Gson();
+        Acciones acciones = gson.fromJson(json, Acciones.class);
+        AccionFase.setAccionFase(acciones);
     }
 
 }
