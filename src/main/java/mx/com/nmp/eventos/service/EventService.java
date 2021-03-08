@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import mx.com.nmp.eventos.model.constant.*;
 import mx.com.nmp.eventos.model.nr.Evento;
+import mx.com.nmp.eventos.model.page.Page;
+import mx.com.nmp.eventos.model.page.PageResponse;
 import mx.com.nmp.eventos.model.response.*;
 import mx.com.nmp.eventos.repository.RepositoryLog;
 import mx.com.nmp.eventos.utils.ElasticQuery;
@@ -12,7 +14,6 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountRequest;
@@ -24,6 +25,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.support.PagedListHolder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
@@ -33,7 +35,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @Service
@@ -69,7 +70,7 @@ public class EventService {
     //// Dashboard
 
     public List<DashBoard> getDashboard(){
-        AccionFase.accionFase = getFaseAction();
+        //AccionFase.accionFase = getFaseAction();
         List<DashBoard> boards = new ArrayList<>();
         boards.add(getEventAction());
         boards.add(getEventLevel());
@@ -83,19 +84,18 @@ public class EventService {
     @Async
     private DashBoard getEventAction(){
         DashBoard eventAction = new DashBoard();
-        int actionLength = AccionFase.accionFase.getAcciones().size();
-        Long[] data = new Long[actionLength];
         List<String> labels = new ArrayList<>();
-        for(int i = 0; i < actionLength; i ++){
-            data[i]=countEventActionLastDay(Key.eventAction, AccionFase.accionFase.getAcciones().get(i).getNombre(),labels);
-        }
+        List<Long> data = new ArrayList<>();
+        List<String> acciones = new ArrayList<>();
+        AccionFase.accionFase.getAcciones().forEach(accion -> {
+            acciones.add(accion.getNombre());
+        });
+        //long total = AccionFase.accionFase.getAcciones().stream().mapToLong(accion -> countEventActionLastDay(Key.eventAction, accion.getNombre(), labels, data)).sum();
+        //long total = AccionFase.accionFase.getAcciones().parallelStream().mapToLong(accion -> countEventActionLastDay(Key.eventAction, accion.getNombre(), labels, data)).sum();
+        long total = acciones.parallelStream().mapToLong(accion -> countEventActionLastDay(Key.eventAction, accion, labels, data)).sum();
         eventAction.setData(data);
         eventAction.setLabels(labels);
         eventAction.setKey(Key.eventAction);
-        long total = 0;
-        for (int i = 0; i < actionLength ; i++){
-            total += data[i];
-        }
         eventAction.setTotal(total);
         return eventAction;
     }
@@ -104,19 +104,12 @@ public class EventService {
     private DashBoard getEventLevel(){
         DashBoard eventLevel = new DashBoard();
         List<String> labels = new ArrayList<>();
-        Long[] data = new Long[5];
-        data[0]=countEventActionLastDay(Key.eventLevel, Nivel.info,labels);
-        data[1]=countEventActionLastDay(Key.eventLevel, Nivel.error,labels);
-        data[2]=countEventActionLastDay(Key.eventLevel, Nivel.debug,labels);
-        data[3]=countEventActionLastDay(Key.eventLevel, Nivel.fatal,labels);
-        data[4]=countEventActionLastDay(Key.eventLevel, Nivel.trace,labels);
+        List<Long> data = new ArrayList<>();
+        //long total = Arrays.stream(Nivel.name).mapToLong(nivel -> countEventActionLastDay(Key.eventLevel, nivel, labels, data)).sum();
+        long total = Arrays.stream(Nivel.name).parallel().mapToLong(nivel -> countEventActionLastDay(Key.eventLevel, nivel, labels, data)).sum();
         eventLevel.setData(data);
         eventLevel.setLabels(labels);
         eventLevel.setKey(Key.eventLevel);
-        long total = 0;
-        for (int i = 0; i < 5 ; i++){
-            total += data[i];
-        }
         eventLevel.setTotal(total);
         return eventLevel;
     }
@@ -177,6 +170,9 @@ public class EventService {
         for(int m = 0; m < 3 ; m ++){
            setMonth(labels,m);
         }
+        AccionFase.accionFase.getAcciones().parallelStream().forEach(accion -> {
+
+        });
         eventYear.setLabels(labels);
         eventYear.setEvents(events);
         eventYear.setData(data);
@@ -318,7 +314,7 @@ public class EventService {
 
     //  Cuarto Nivel
 
-    public List<Evento> getFourthLevel(String accion, String fase, String nivel, String desde, String hasta){
+    public PageResponse getFourthLevel(String accion, String fase, String nivel, String desde, String hasta){
         List<Evento> eventos = new ArrayList<>();
         List<String> horas = new ArrayList<>();
         horas.add("00");
@@ -337,7 +333,15 @@ public class EventService {
             String horaFin = String.format("%02d",Integer.parseInt(hora) + 1);
             eventos.addAll(getEventsByDate(accion, fase, nivel, desde, hasta, hora, horaFin));
         });
-        return eventos;
+        PagedListHolder page = new PagedListHolder(eventos);
+        page.setPageSize(10); // number of items per page
+        page.setPage(0);// set to first page
+        page.getPageCount(); // number of pages
+        Page.pagination = page;
+        PageResponse pageResponse = new PageResponse();
+        pageResponse.setNumPages(page.getPageCount());
+        pageResponse.setTotalEvents(eventos.size());
+        return pageResponse;
     }
 
 //////////-----
@@ -349,7 +353,6 @@ public class EventService {
             SearchRequest searchRequest = ElasticQuery.getByActionLevelDayLogs(accion, fase, nivel, constants.getINDICE(),constants.getTIME_ZONE(),desde, hasta, inicio, fin);
             searchRequest.scroll(scroll);
             SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
-            String scrollId = searchResponse.getScrollId();
             SearchHit[] searchHits = searchResponse.getHits().getHits();
             addLog(searchHits, eventos);
         } catch (ElasticsearchStatusException | ActionRequestValidationException | IOException ess) {
@@ -448,11 +451,12 @@ public class EventService {
     }
 
     @Async
-    private long countEventActionLastDay(String field, String value, List<String> evento){
-        evento.add(value);
+    private long countEventActionLastDay(String field, String value, List<String> labels,List<Long> data){
+        labels.add(value);
         try {
             CountRequest countRequest = ElasticQuery.getActionLevelLastDay(field ,value ,constants.getINDICE(),constants.getTIME_ZONE());
             CountResponse countResponse = restHighLevelClient.count(countRequest, RequestOptions.DEFAULT);
+            data.add(countResponse.getCount());
             return countResponse.getCount();
         } catch (IOException e) {
             LOGGER.info("Error: " + e.getMessage());

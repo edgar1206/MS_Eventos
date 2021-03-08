@@ -1,6 +1,8 @@
 package mx.com.nmp.eventos.controller;
 
 import mx.com.nmp.eventos.model.nr.Evento;
+import mx.com.nmp.eventos.model.page.Page;
+import mx.com.nmp.eventos.model.page.PageResponse;
 import mx.com.nmp.eventos.model.response.Acciones;
 import mx.com.nmp.eventos.model.response.DashBoard;
 import mx.com.nmp.eventos.model.response.SecondLevel;
@@ -59,7 +61,7 @@ public class EventController {
     }
 
     @GetMapping(value = "/fourth_level")
-    public List<Evento> getFourthLevel(@RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="date", required=true)String fecha){
+    public PageResponse getFourthLevel(@RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="date", required=true)String fecha){
         if(accion != null && fase != null){
             if(!Validator.validateActionPhase(accion,fase)){
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
@@ -71,6 +73,17 @@ public class EventController {
     @GetMapping(value = "/actions")
     public Acciones getActionPhase(){
         return serviceLog.getActionsPhases();
+    }
+
+    @GetMapping(value = "/fourth_level/events")
+    public List<Evento> getPage(@RequestParam(value="page", defaultValue = "0")int size){
+        if(Page.pagination == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, no hay paginas disponibles.");
+        if(size > -1 && size <= Page.pagination.getPageCount()){
+            Page.pagination.setPage(size);
+            return Page.pagination.getPageList();
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, pagina no valida.");
     }
 
 }

@@ -55,9 +55,9 @@ public class EventControllerTest {
     }
   @Test
   public void getFourthLevelParemetros(){
-      List<Evento> eventos = new ArrayList<>();
+     /* List<Evento> eventos = new ArrayList<>();
       when(serviceLog.getFourthLevel("Login", "Autenticar","error", "2021-01-22","2021-01-22")).thenReturn(eventos);
-      eventController.getFourthLevel("Autenticar","Login","error", "2021-01-22");
+      eventController.getFourthLevel("Autenticar","Login","error", "2021-01-22");*/
 
   }
     @Test
