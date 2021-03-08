@@ -1,6 +1,7 @@
 package mx.com.nmp.eventos.controller;
 
 import mx.com.nmp.eventos.model.nr.Evento;
+import mx.com.nmp.eventos.model.nr.EventoDto;
 import mx.com.nmp.eventos.model.response.Acciones;
 import mx.com.nmp.eventos.model.response.DashBoard;
 import mx.com.nmp.eventos.model.response.SecondLevel;
@@ -23,9 +24,23 @@ public class EventController {
     private EventService serviceLog;
 
     @PostMapping("/event")
-    public ResponseEntity<?> addEvent(@RequestBody Evento evento){
+    public ResponseEntity<?> addEvent(@RequestBody EventoDto evento){
         try{
-            serviceLog.addEvent(evento);
+            Evento eventoPersistencia = new Evento();
+            eventoPersistencia.setIdEvent(evento.getIdEvent());
+            eventoPersistencia.setEventType(evento.getEventType());
+            eventoPersistencia.setEventLevel(evento.getEventLevel());
+            eventoPersistencia.setEventCategory(evento.getEventCategory());
+            eventoPersistencia.setEventAction(evento.getEventAction());
+            eventoPersistencia.setEventDescription(evento.getEventDescription());
+            eventoPersistencia.setSeverity(evento.getSeverity());
+            eventoPersistencia.setEventResource(evento.getEventResource());
+            eventoPersistencia.setTimeGenerated(evento.getTimeGenerated());
+            eventoPersistencia.setEventPhase(evento.getEventPhase());
+            eventoPersistencia.setResolutionTower(evento.getResolutionTower());
+            eventoPersistencia.setApplicationName(evento.getApplicationName());
+            eventoPersistencia.setConfigurationElement(evento.getConfigurationElement());
+            serviceLog.addEvent(eventoPersistencia);
             return ResponseEntity.ok().build();
         }catch (Exception e){
             return ResponseEntity.badRequest().build();
@@ -60,10 +75,10 @@ public class EventController {
 
     @GetMapping(value = "/fourth_level")
     public List<Evento> getFourthLevel(@RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="date", required=true)String fecha){
-        if(accion != null && fase != null){
-            if(!Validator.validateActionPhase(accion,fase)){
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
-            }
+        if(accion != null && fase != null && !Validator.validateActionPhase(accion,fase)){
+
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
+
         }
         return serviceLog.getFourthLevel(accion,fase,nivel,fecha,fecha);
     }

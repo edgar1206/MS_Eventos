@@ -6,12 +6,14 @@ import mx.com.nmp.eventos.model.constant.AccionFase;
 import mx.com.nmp.eventos.model.constant.Constants;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.Acciones;
+import mx.com.nmp.eventos.repository.RepositoryLog;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountResponse;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.util.Assert;
 import org.springframework.web.server.ResponseStatusException;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
@@ -28,6 +29,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,6 +41,8 @@ class EventServiceTest {
 
 
     private RestHighLevelClient restHighLevelClient;
+    @Mock
+    private RepositoryLog repositoryLog;
 
     @Mock
     private CountResponse countResponse;
@@ -108,7 +113,7 @@ class EventServiceTest {
     void getDashboard(){
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        Assert.notNull( eventService.getDashboard());
+        Assertions.assertNotNull( eventService.getDashboard());
     }
 
     @Test
@@ -116,27 +121,26 @@ class EventServiceTest {
         cargaAccionFase();
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        //eventService.loadActions();
-        eventService.getSecondLevel("Login");
+        Assertions.assertNotNull(eventService.getSecondLevel("Login"));
     }
     @Test
     void getThirdLevel()  {
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        eventService.getThirdLevel("Login", "Usuario Monte");
+        Assertions.assertNotNull(eventService.getThirdLevel("Login", "Usuario Monte"));
     }
 
     @Test
     void getFourthLevelParametros() {
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        eventService.getFourthLevel("Autenticar","Token refresh", "error","2020-12-01", "2021-01-25");
+        Assertions.assertEquals(eventService.getFourthLevel("Autenticar","Token refresh", "error","2020-12-01", "2021-01-25").size(),0);
     }
     @Test
     void getFourthLevel() {
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        eventService.getFourthLevel(null,null, null,"2020-12-01", "2021-01-25");
+        Assertions.assertEquals(eventService.getFourthLevel(null,null, null,"2020-12-01", "2021-01-25").size(),0);
     }
     @Test
     void getFourthLevelException() {
@@ -151,14 +155,8 @@ class EventServiceTest {
 
     @Test
     void addEventException(){
-        boolean thrown = false;
-        try {
             eventService.addEvent(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089", "Usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"));
-        } catch (ResponseStatusException e) {
-            thrown = true;
-        }
-        assertTrue(thrown);
-
+            verify(repositoryLog).save(any(Evento.class));
     }
 
     private static <T> Map<String, Object> transformerObject(T clazz) {
