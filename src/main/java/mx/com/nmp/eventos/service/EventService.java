@@ -193,7 +193,7 @@ public class EventService {
         long total = 0;
         for (int i = 0; i < Nivel.name.length; i ++){
             for(int j = 0; j < actionLength ; j ++){
-                data[i][j] = countByLevelActionDay(AccionFase.accionFase.getAcciones().get(i).getNombre(),Nivel.name[i]);
+                data[i][j] = countByLevelActionDay(AccionFase.accionFase.getAcciones().get(j).getNombre(),Nivel.name[i]);
                 total += data[i][j];
             }
             levels.add(Nivel.name[i]);
@@ -229,11 +229,11 @@ public class EventService {
                 Table table = new Table();
                 table.setFase(fase.getNombre());
                 for (int i = 0; i < 7; i ++){
-                    table.setInfo(getPhaseByAction(action,fase.getNombre(),Nivel.INFO,String.valueOf(i)));
-                    table.setError(getPhaseByAction(action,fase.getNombre(),Nivel.ERROR,String.valueOf(i)));
-                    table.setDebug(getPhaseByAction(action,fase.getNombre(),Nivel.DEBUG,String.valueOf(i)));
-                    table.setTrace(getPhaseByAction(action,fase.getNombre(),Nivel.TRACE,String.valueOf(i)));
-                    table.setFatal(getPhaseByAction(action,fase.getNombre(),Nivel.FATAL,String.valueOf(i)));
+                    table.setInfo(table.getInfo()+getPhaseByAction(action,fase.getNombre(),Nivel.INFO,String.valueOf(i)));
+                    table.setError(table.getError()+getPhaseByAction(action,fase.getNombre(),Nivel.ERROR,String.valueOf(i)));
+                    table.setDebug(table.getDebug()+getPhaseByAction(action,fase.getNombre(),Nivel.DEBUG,String.valueOf(i)));
+                    table.setTrace(table.getTrace()+getPhaseByAction(action,fase.getNombre(),Nivel.TRACE,String.valueOf(i)));
+                    table.setFatal(table.getFatal()+getPhaseByAction(action,fase.getNombre(),Nivel.FATAL,String.valueOf(i)));
                 }
                 lista.add(table);
             });
