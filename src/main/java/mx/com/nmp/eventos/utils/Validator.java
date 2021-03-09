@@ -1,6 +1,7 @@
 package mx.com.nmp.eventos.utils;
 
 import mx.com.nmp.eventos.model.constant.AccionFase;
+import mx.com.nmp.eventos.model.constant.Nivel;
 import mx.com.nmp.eventos.model.response.Accion;
 import mx.com.nmp.eventos.model.response.Fase;
 
@@ -11,6 +12,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Validator {
+    public static Boolean validateLevel(String level){
+        for(String nivel:Nivel.name){
+            if(level.equalsIgnoreCase(nivel)){
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static Boolean validateAction(String action){
         for(int i = 0; i < AccionFase.accionFase.getAcciones().size(); i++){

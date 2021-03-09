@@ -145,9 +145,9 @@ public class ElasticQuery {
         }
         else
         {
-            if(phase==null || phase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, fase es nulo o vacio.");
-            if(action==null || action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, accion es nulo o vacio.");
-            if(level==null || level.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, nivel es nulo o vacio");
+            if(phase==null || phase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, phase es nulo o vacio.");
+            if(action==null || action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, action es nulo o vacio.");
+            if(level==null || level.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, level es nulo o vacio");
 
             SearchRequest searchRequest = new SearchRequest();
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();

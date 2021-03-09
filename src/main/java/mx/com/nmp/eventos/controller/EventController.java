@@ -75,7 +75,7 @@ public class EventController {
 
     @GetMapping(value = "/fourth_level")
     public List<Evento> getFourthLevel(@RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="date", required=true)String fecha){
-        if(accion != null && fase != null && !Validator.validateActionPhase(accion,fase)){
+        if(accion != null && fase != null && nivel!=null && (!Validator.validateActionPhase(accion,fase) || !Validator.validateLevel(nivel))){
 
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
 
