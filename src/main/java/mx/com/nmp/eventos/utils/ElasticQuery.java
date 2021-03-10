@@ -155,7 +155,7 @@ public class ElasticQuery {
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
-            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T"+inicio+":00:00").lte(fecha2+"T"+inicio+":59:59").timeZone(ElasticQuery.getUtc(timeZone)));
+            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T"+inicio+":00:00").lte(fecha2+"T"+fin+":59:59").timeZone(ElasticQuery.getUtc(timeZone)));
             sourceBuilder.query(boolQueryBuilder);
             sourceBuilder.from(0);
             sourceBuilder.size(10000);
