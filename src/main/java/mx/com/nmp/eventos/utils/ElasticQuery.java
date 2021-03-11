@@ -25,7 +25,7 @@ public class ElasticQuery {
         }else {
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
         }
-        if(action.contains(" ")){
+        if(phase.contains(" ")){
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
         }else{
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
@@ -76,7 +76,7 @@ public class ElasticQuery {
         }else {
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
         }
-        if(action.contains(" ")){
+        if(phase.contains(" ")){
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
         }else{
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
@@ -185,7 +185,7 @@ public class ElasticQuery {
             }else {
                 boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
             }
-            if(action.contains(" ")){
+            if(phase.contains(" ")){
                 boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
             }else{
                 boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
