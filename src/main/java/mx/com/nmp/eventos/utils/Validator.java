@@ -12,8 +12,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Validator {
+
     public static Boolean validateLevel(String level){
-        for(String nivel:Nivel.name){
+        for(String nivel: Nivel.niveles){
             if(level.equalsIgnoreCase(nivel)){
                 return true;
             }
@@ -102,6 +103,12 @@ public class Validator {
             match.appendReplacement(strbf, match.group(1).toUpperCase() + match.group(2).toLowerCase());
         }
         return match.appendTail(strbf).toString();
+    }
+
+    public static List<String> validateLevels(List<String> niveles){
+        return niveles.stream()
+                .distinct()
+                .collect(Collectors.toList());
     }
 
 }

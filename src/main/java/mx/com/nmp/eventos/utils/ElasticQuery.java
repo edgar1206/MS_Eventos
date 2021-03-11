@@ -215,6 +215,16 @@ public class ElasticQuery {
         return searchRequest;
     }
 
+    public static SearchRequest groupByLevel(String index) {
+        TermsAggregationBuilder aggregation = AggregationBuilders.terms("level")
+                .field("eventLevel.keyword").size(100);
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder().aggregation(aggregation);
+        SearchRequest searchRequest = new SearchRequest();
+        searchRequest.indices(index);
+        searchRequest.source(sourceBuilder);
+        return searchRequest;
+    }
+
     public static String getUtc(String timeZone){
         TimeZone zone = TimeZone.getTimeZone(timeZone);
         int horas =  zone.getOffset(Calendar.ZONE_OFFSET)/36000;

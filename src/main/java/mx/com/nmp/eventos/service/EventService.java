@@ -62,6 +62,7 @@ public class EventService {
     @Bean
     public void loadActions(){
         AccionFase.accionFase = getFaseAction();
+        Nivel.niveles = getLevels();
     }
 
     //// Dashboard
@@ -102,19 +103,14 @@ public class EventService {
     private DashBoard getEventLevel(){
         DashBoard eventLevel = new DashBoard();
         List<String> labels = new ArrayList<>();
-        Long[] data = new Long[5];
-        data[0]=countEventActionLastDay(Key.eventLevel, Nivel.info,labels);
-        data[1]=countEventActionLastDay(Key.eventLevel, Nivel.error,labels);
-        data[2]=countEventActionLastDay(Key.eventLevel, Nivel.debug,labels);
-        data[3]=countEventActionLastDay(Key.eventLevel, Nivel.fatal,labels);
-        data[4]=countEventActionLastDay(Key.eventLevel, Nivel.trace,labels);
+        List<Long> data = new ArrayList<>();
+        Nivel.niveles.forEach(nivel -> {
+            data.add(countEventActionLastDay(Key.eventLevel, nivel,labels));
+        });
         eventLevel.setData(data);
         eventLevel.setLabels(labels);
         eventLevel.setKey(Key.eventLevel);
-        long total = 0;
-        for (int i = 0; i < 5 ; i++){
-            total += data[i];
-        }
+        long total = data.stream().mapToLong(dato -> dato).sum();
         eventLevel.setTotal(total);
         return eventLevel;
     }
@@ -189,14 +185,14 @@ public class EventService {
         List<String> levels = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         int actionLength = AccionFase.accionFase.getAcciones().size();
-        Long[][] data = new Long[Nivel.name.length][actionLength];
+        Long[][] data = new Long[Nivel.niveles.size()][actionLength];
         long total = 0;
-        for (int i = 0; i < Nivel.name.length; i ++){
+        for (int i = 0; i < Nivel.niveles.size(); i ++){
             for(int j = 0; j < actionLength ; j ++){
-                data[i][j] = countByLevelActionDay(AccionFase.accionFase.getAcciones().get(j).getNombre(),Nivel.name[i]);
+                data[i][j] = countByLevelActionDay(AccionFase.accionFase.getAcciones().get(j).getNombre(),Nivel.niveles.get(i));
                 total += data[i][j];
             }
-            levels.add(Nivel.name[i]);
+            levels.add(Nivel.niveles.get(i));
         }
         for(int m = 0; m < actionLength ; m ++){
             labels.add(AccionFase.accionFase.getAcciones().get(m).getNombre());
@@ -229,11 +225,10 @@ public class EventService {
                 Table table = new Table();
                 table.setFase(fase.getNombre());
                 for (int i = 0; i < 7; i ++){
-                    table.setInfo(table.getInfo()+getPhaseByAction(action,fase.getNombre(),Nivel.INFO,String.valueOf(i)));
-                    table.setError(table.getError()+getPhaseByAction(action,fase.getNombre(),Nivel.ERROR,String.valueOf(i)));
-                    table.setDebug(table.getDebug()+getPhaseByAction(action,fase.getNombre(),Nivel.DEBUG,String.valueOf(i)));
-                    table.setTrace(table.getTrace()+getPhaseByAction(action,fase.getNombre(),Nivel.TRACE,String.valueOf(i)));
-                    table.setFatal(table.getFatal()+getPhaseByAction(action,fase.getNombre(),Nivel.FATAL,String.valueOf(i)));
+                    int finalI = i;
+                    Nivel.niveles.forEach(nivel ->{
+                        table.setInfo(table.getInfo()+getPhaseByAction(action,fase.getNombre(),nivel,String.valueOf(finalI)));
+                    });
                 }
                 lista.add(table);
             });
@@ -246,10 +241,10 @@ public class EventService {
         List<String> events = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         long total = 0;
-        for (int i = 0; i < 5; i ++){
-            events.add(Nivel.name[i]);
+        for (int i = 0; i < Nivel.niveles.size(); i ++){
+            events.add(Nivel.niveles.get(i));
             for(int j = 0; j < 7 ; j ++){
-                data[i][j] = countByActionLevelDay(j,action,Nivel.name[i]);
+                data[i][j] = countByActionLevelDay(j,action,Nivel.niveles.get(i));
                 total += data[i][j];
             }
         }
@@ -267,8 +262,8 @@ public class EventService {
 
     public List<DashBoard> getThirdLevel(String accion, String fase){
         List<DashBoard> boards = new ArrayList<>();
-        for(int i =0; i < Nivel.name.length; i++ ){
-            boards.add(getByLevel(accion, fase, Nivel.name[i]));
+        for(int i =0; i < Nivel.niveles.size(); i++ ){
+            boards.add(getByLevel(accion, fase, Nivel.niveles.get(i)));
         }
         boards.add(getPhaseEventWeek(accion, fase));
         return boards;
@@ -294,12 +289,12 @@ public class EventService {
         DashBoard eventWeek = new DashBoard();
         List<String> events = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-        Long[][] data = new Long[5][7];
+        Long[][] data = new Long[Nivel.niveles.size()][7];
         long total = 0;
-        for (int i = 0; i < 5; i ++){
-            events.add(Nivel.name[i]);
+        for (int i = 0; i < Nivel.niveles.size(); i ++){
+            events.add(Nivel.niveles.get(i));
             for(int j = 0; j < 7 ; j ++){
-                data[i][j] = countByDayPhaseLevel(j,Nivel.name[i],action,phase);
+                data[i][j] = countByDayPhaseLevel(j,Nivel.niveles.get(i),action,phase);
                 total += data[i][j];
             }
         }
@@ -553,5 +548,25 @@ public class EventService {
         return acciones;
     }
 
+    @Async
+    public List<String> getLevels(){
+        List<String> niveles = new ArrayList<>();
+        SearchResponse response = null;
+        try {
+            response = restHighLevelClient.search(ElasticQuery.groupByLevel(constants.getINDICE()), RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            LOGGER.info("Error: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+        Map<String, Aggregation> results = response.getAggregations().getAsMap();
+        ParsedStringTerms levels = (ParsedStringTerms) results.get("level");
+        for (Terms.Bucket level : levels.getBuckets()) {
+            niveles.add(level.getKeyAsString().toUpperCase().trim());
+        }
+
+        niveles = Validator.validateLevels(niveles);
+
+        return niveles;
+    }
 
 }
