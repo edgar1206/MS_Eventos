@@ -21,11 +21,15 @@ public class ElasticQuery {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         if(action.contains(" ")){
-            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
         }else {
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
         }
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
+        if(action.contains(" ")){
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
+        }else{
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
+        }
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte("now-" + day + "d/d").lte("now-" + day + "d/d").timeZone(ElasticQuery.getUtc(timeZone)));
         searchSourceBuilder.query(boolQueryBuilder);
@@ -50,8 +54,12 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword", action));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel.keyword", level));
+        if(action.contains(" ")){
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
+        }else {
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
+        }
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte("now-1d").lte("now").timeZone(ElasticQuery.getUtc(timeZone)));
         searchSourceBuilder.query(boolQueryBuilder);
         countRequest.indices(index);
@@ -63,9 +71,17 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword", action));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel.keyword", level));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase", phase));
+        if(action.contains(" ")){
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
+        }else {
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
+        }
+        if(action.contains(" ")){
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
+        }else{
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
+        }
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel", level));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + dia + "d/d")
                 .lte("now-" + dia + "d/d")
@@ -104,7 +120,11 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.termQuery("eventAction.keyword",action));
+        if(action.contains(" ")){
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
+        }else {
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
+        }
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + mes + "M/M")
                 .lte("now-" + mes + "M/M")
@@ -119,8 +139,12 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword", action));
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel.keyword", level));
+        if(action.contains(" ")){
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
+        }else {
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
+        }
+        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel", level));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + dia + "d/d")
                 .lte("now-" + dia + "d/d")
@@ -156,8 +180,16 @@ public class ElasticQuery {
             SearchRequest searchRequest = new SearchRequest();
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
-            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
+            if(action.contains(" ")){
+                boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction", action));
+            }else {
+                boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
+            }
+            if(action.contains(" ")){
+                boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase",phase));
+            }else{
+                boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
+            }
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
             boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T"+inicio+":00:00").lte(fecha2+"T"+fin+":59:59").timeZone(ElasticQuery.getUtc(timeZone)));
             sourceBuilder.query(boolQueryBuilder);
