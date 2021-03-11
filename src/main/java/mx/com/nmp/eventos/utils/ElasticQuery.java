@@ -20,7 +20,11 @@ public class ElasticQuery {
         CountRequest countRequest = new CountRequest();
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-        boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
+        if(action.contains(" ")){
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction",action));
+        }else {
+            boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventAction.keyword",action));
+        }
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventPhase.keyword",phase));
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("eventLevel",level));
         boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte("now-" + day + "d/d").lte("now-" + day + "d/d").timeZone(ElasticQuery.getUtc(timeZone)));
@@ -52,7 +56,6 @@ public class ElasticQuery {
         searchSourceBuilder.query(boolQueryBuilder);
         countRequest.indices(index);
         countRequest.source(searchSourceBuilder);
-        System.out.println(searchSourceBuilder);
         return countRequest;
     }
 
