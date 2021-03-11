@@ -50,7 +50,7 @@ public class Validator {
         List<Accion> resultado = new ArrayList<>();
 
         for (Accion action : actions) {
-            acciones.add(action.getNombre());
+            if(!action.getNombre().equalsIgnoreCase(""))acciones.add(action.getNombre());
         }
         List<String> valoresUnicos = acciones
                 .stream()
