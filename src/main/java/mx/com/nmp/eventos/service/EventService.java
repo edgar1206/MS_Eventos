@@ -534,12 +534,12 @@ public class EventService {
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
         for (Terms.Bucket action : actions.getBuckets()) {
             Accion accion = new Accion();
-            accion.setNombre(action.getKeyAsString().toUpperCase());//--
+            accion.setNombre(action.getKeyAsString().trim());//--
             List<Fase> fases = new ArrayList<>();
             ParsedStringTerms phases = (ParsedStringTerms) action.getAggregations().getAsMap().get("phase");
             for (Terms.Bucket phase : phases.getBuckets()) {
                 Fase fase = new Fase();
-                fase.setNombre(phase.getKeyAsString().toUpperCase());//--
+                fase.setNombre(phase.getKeyAsString().trim());//--
                 fases.add(fase);
             }
             accion.setFases(fases);
