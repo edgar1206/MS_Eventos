@@ -76,10 +76,11 @@ public class ElasticQuery {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("applicationName",appName));
-        sourceBuilder.query(QueryBuilders.rangeQuery("timeGenerated")
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + dia + "d/d")
                 .lte("now-" + dia + "d/d")
                 .timeZone(getUtc(timeZone)));
+        sourceBuilder.query(boolQueryBuilder);
         countRequest.indices(index);
         countRequest.source(sourceBuilder);
         return countRequest;
@@ -109,10 +110,11 @@ public class ElasticQuery {
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("applicationName",appName));
-        sourceBuilder.query(QueryBuilders.rangeQuery("timeGenerated")
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
                 .gte("now-" + week + "w/w")
                 .lte("now-" + week + "w/w")
                 .timeZone(getUtc(timeZone)));
+        sourceBuilder.query(boolQueryBuilder);
         countRequest.indices(index);
         countRequest.source(sourceBuilder);
         return countRequest;
@@ -136,14 +138,17 @@ public class ElasticQuery {
         return searchRequest;
     }
 
-    public static SearchRequest getByActionLevelDayLogs(String action, String phase,String level, String index, String timeZone, String fecha1, String fecha2, String inicio, String fin, String appName){
+    public static SearchRequest getByActionLevelDayLogs(String action, String phase, String level, String index, String timeZone, String fecha1, String fecha2, String inicio, String fin, String appName){
 
         if(action==null && phase==null && level==null){
             SearchRequest searchRequest = new SearchRequest();
             SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
             BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
             boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("applicationName",appName));
-            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated").gte(fecha1+"T"+inicio+":00:00").lte(fecha2+"T"+fin+":59:59").timeZone(ElasticQuery.getUtc(timeZone)));
+            boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
+                    .gte(fecha1+"T"+inicio+":00:00")
+                    .lte(fecha2+"T"+fin+":59:59")
+                    .timeZone(ElasticQuery.getUtc(timeZone)));
             sourceBuilder.query(boolQueryBuilder);
             sourceBuilder.from(0);
             sourceBuilder.size(10000);
@@ -177,10 +182,14 @@ public class ElasticQuery {
         }
     }
 
-    public static SearchRequest groupbyActionandPhase(String index, String appName) {
+    public static SearchRequest groupbyActionandPhase(String index, String timeZone, String month, String appName) {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
         boolQueryBuilder.must(QueryBuilders.matchPhraseQuery("applicationName", appName));
+        boolQueryBuilder.filter(QueryBuilders.rangeQuery("timeGenerated")
+                .gte("now-" + month + "M/M")
+                .lte("now")
+                .timeZone(getUtc(timeZone)));
         TermsAggregationBuilder subAggregation = AggregationBuilders.terms("phase")
             .field("eventPhase.keyword").size(100);
         TermsAggregationBuilder aggregation = AggregationBuilders.terms("action")

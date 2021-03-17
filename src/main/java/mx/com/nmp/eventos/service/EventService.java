@@ -58,7 +58,7 @@ public class EventService {
     //// Dashboard
 
     public List<DashBoard> getDashboard(String appName){
-        AccionFase.accionFase = getFaseAction(appName);
+        getFaseAction(appName);
         List<DashBoard> boards = new ArrayList<>();
         getEventActionLevel(appName, boards);
         boards.add(getEventWeek(appName));
@@ -116,10 +116,11 @@ public class EventService {
         DashBoard eventYear = new DashBoard();
         List<String> events = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-        for (Accion accion : AccionFase.accionFase.getAcciones()) {
+        Acciones acciones = AccionFaseApp.app.get(appName);
+        int actionSize = acciones.getAcciones().size();
+        for (Accion accion : acciones.getAcciones()) {
             events.add(accion.getNombre());
         }
-        int actionSize = AccionFase.accionFase.getAcciones().size();
         Long[][] data = new Long[actionSize][3];
         for (Long[] datum : data) {
             Arrays.fill(datum, 0L);
@@ -148,15 +149,16 @@ public class EventService {
     private DashBoard getEventDayActionLevel(String appName){
         DashBoard eventDayActionLevel = new DashBoard();
         List<String> labels = new ArrayList<>();
-        int actionLength = AccionFase.accionFase.getAcciones().size();
+        Acciones acciones = AccionFaseApp.app.get(appName);
+        int actionLength = acciones.getAcciones().size();
         Long[][] data = new Long[Nivel.name.length][actionLength];
         for (Long[] datum : data) {
             Arrays.fill(datum, 0L);
         }
         List<String> levels = new ArrayList<>(Arrays.asList(Nivel.name));
-        countByLevelActionDay(data, levels, appName);
+        countByLevelActionDay(data, appName);
         for(int m = 0; m < actionLength ; m ++){
-            labels.add(AccionFase.accionFase.getAcciones().get(m).getNombre());
+            labels.add(acciones.getAcciones().get(m).getNombre());
         }
         long total = 0;
         for (Long[] datum : data) {
@@ -184,7 +186,8 @@ public class EventService {
     private List<Map<String, String>> getTable(String action, String appName){
         List<Map<String, String>> mapList = new ArrayList<>();
         Accion accion = new Accion();
-        for (Accion nodoAccion : AccionFase.accionFase.getAcciones()) {
+        Acciones acciones = AccionFaseApp.app.get(appName);
+        for (Accion nodoAccion : acciones.getAcciones()) {
             if(nodoAccion.getNombre().equals(action))
                 accion = nodoAccion;
         }
@@ -239,7 +242,6 @@ public class EventService {
         for (Long[] longs : dataWeek) {
             Arrays.fill(longs, 0L);
         }
-
         List<String> labels = new ArrayList<>();
         List<SearchResponse> searchResponses = new ArrayList<>();
         for (int i = 0; i < 7; i++)
@@ -341,11 +343,11 @@ public class EventService {
         Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms phases = (ParsedStringTerms) results.get("phase");
         for (Terms.Bucket phase : phases.getBuckets()) {
-            if(map.get("fase").equalsIgnoreCase(phase.getKeyAsString())){
+            if(map.get("fase").equalsIgnoreCase(phase.getKeyAsString().trim())){
                 ParsedStringTerms levels = (ParsedStringTerms) phase.getAggregations().getAsMap().get("level");
                 for (Terms.Bucket level : levels.getBuckets()) {
                     Arrays.stream(Nivel.name).forEach( nivel -> {
-                        if(level.getKeyAsString().equalsIgnoreCase(nivel)){
+                        if(level.getKeyAsString().trim().equalsIgnoreCase(nivel)){
                             map.put(nivel,String.valueOf(level.getDocCount()));
                         }
                     });
@@ -419,9 +421,11 @@ public class EventService {
     }
 
     @Async
-    public void countByLevelActionDay(Long[][] data, List<String> listLevel, String appName){
+    public void countByLevelActionDay(Long[][] data, String appName){
         SearchRequest searchRequest = null;
         SearchResponse searchResponse = null;
+        Acciones acciones = AccionFaseApp.app.get(appName);
+        int actionLength = acciones.getAcciones().size();
         try {
             searchRequest = ElasticQuery.getActionLevelLastDay(constants.getINDICE(),constants.getTIME_ZONE(), appName);
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
@@ -432,7 +436,6 @@ public class EventService {
 
         DashBoard eventAction = new DashBoard();
 
-        int actionLength = AccionFase.accionFase.getAcciones().size();
         List<String> labelsAction = new ArrayList<>();
         List<String> labelsLevel = new ArrayList<>(Arrays.asList(Nivel.name));
         Long[] dataAction = new Long[actionLength];
@@ -442,17 +445,15 @@ public class EventService {
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
         int pos = 0;
         for (Terms.Bucket action : actions.getBuckets()) {
-            for (Accion accion : AccionFase.accionFase.getAcciones()) {
+            for (Accion accion : acciones.getAcciones()) {
                 if(action.getKeyAsString().trim().equals(accion.getNombre())){
                     labelsAction.add(accion.getNombre());
-                    //dataAction[pos] = action.getDocCount();
                     pos ++;
-
                     ParsedStringTerms levels = (ParsedStringTerms) action.getAggregations().getAsMap().get("level");
                     int posLevel = 0;
                     for (Terms.Bucket level : levels.getBuckets()) {
                         for (String nivel : labelsLevel) {
-                            if(nivel.equalsIgnoreCase(level.getKeyAsString())){
+                            if(nivel.equalsIgnoreCase(level.getKeyAsString().trim())){
                                 data[pos][posLevel] += level.getDocCount();
                             }
                         }
@@ -470,13 +471,14 @@ public class EventService {
         }
         eventAction.setTotal(totalAction);
         eventAction.setKey(Key.eventAction);
-        //return eventAction;
     }
 
     @Async
     private void countEventActionLevelLastDay(List<DashBoard> boards, String appName){
         SearchRequest searchRequest = null;
         SearchResponse searchResponse = null;
+        Acciones acciones = AccionFaseApp.app.get(appName);
+        int actionLength = acciones.getAcciones().size();
         try {
             searchRequest = ElasticQuery.getActionLevelLastDay(constants.getINDICE(),constants.getTIME_ZONE(), appName);
             searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
@@ -488,9 +490,8 @@ public class EventService {
         DashBoard eventAction = new DashBoard();
         DashBoard eventActionLevel = new DashBoard();
 
-        int actionLength = AccionFase.accionFase.getAcciones().size();
         List<String> labelsAction = new ArrayList<>();
-        for (Accion accione : AccionFase.accionFase.getAcciones()) {
+        for (Accion accione : acciones.getAcciones()) {
             labelsAction.add(accione.getNombre());
         }
         List<String> labelsLevel = new ArrayList<>(Arrays.asList(Nivel.name));
@@ -512,7 +513,7 @@ public class EventService {
                     int posLevel = 0;
                     for (Terms.Bucket level : levels.getBuckets()) {
                         for (String nivel : labelsLevel) {
-                            if(nivel.equalsIgnoreCase(level.getKeyAsString())){
+                            if(nivel.equalsIgnoreCase(level.getKeyAsString().trim())){
                                 dataLevel[posLevel] += level.getDocCount();
                             }
                         }
@@ -618,7 +619,7 @@ public class EventService {
 
     public Acciones getFaseAction(String appName){
         SearchResponse response = null;
-        SearchRequest searchRequest = ElasticQuery.groupbyActionandPhase(constants.getINDICE(), appName);
+        SearchRequest searchRequest = ElasticQuery.groupbyActionandPhase(constants.getINDICE(), constants.getTIME_ZONE(), constants.getMONTH(), appName);
         try {
             response = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
@@ -646,14 +647,9 @@ public class EventService {
         accionList = Validator.validateActionPhase(accionList);//
         acciones.setAcciones(accionList);
 
-        AccionFase.accionFase = acciones;
+        AccionFaseApp.app.put(appName,acciones);
 
         return acciones;
-    }
-
-    @Bean
-    private void inicia(){
-        AccionFase.accionFase = getFaseAction("MiMonte");
     }
 
 }

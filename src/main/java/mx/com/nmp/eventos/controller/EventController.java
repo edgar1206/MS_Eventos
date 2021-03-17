@@ -57,7 +57,7 @@ public class EventController {
     @GetMapping(value = "/second_level",params = "action")
     public SecondLevel getSecondLevel(@RequestParam("action")String action, @RequestHeader String appName){
         if(action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
-        if(Validator.validateAction(action)){
+        if(Validator.validateAction(action, appName)){
             return serviceLog.getSecondLevel(action,appName);
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, acción no válida.");
@@ -67,15 +67,15 @@ public class EventController {
     public List<DashBoard> getThirdLevel(@RequestParam("action")String accion, @RequestParam("phase")String fase, @RequestHeader String appName){
         if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
         if(accion.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
-        if(Validator.validateActionPhase(accion,fase)){
-            return serviceLog.getThirdLevel(accion,fase,appName);
+        if(Validator.validateActionPhase(accion, fase, appName)){
+            return serviceLog.getThirdLevel(accion, fase, appName);
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
     }
 
     @GetMapping(value = "/fourth_level")
     public List<Evento> getFourthLevel(@RequestHeader String appName, @RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="date", required=true)String fecha){
-        if(accion != null && fase != null && nivel!=null && (!Validator.validateActionPhase(accion,fase) || !Validator.validateLevel(nivel))){
+        if(accion != null && fase != null && nivel!=null && (!Validator.validateActionPhase(accion, fase, appName) || !Validator.validateLevel(nivel))){
 
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
 

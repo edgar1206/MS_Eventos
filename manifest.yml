@@ -14,4 +14,5 @@ applications:
     ELASTICSEARCH_SCT: Nmp+2406$
     ELASTICSEARCH_INDEX: smnr_mimonte_eventos
     ERROR_INCLUDE_MESSAGE: ALWAYS
+    MONTH: 4
     TIME_ZONE: America/Mexico_City

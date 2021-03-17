@@ -2,7 +2,6 @@ package mx.com.nmp.eventos.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import mx.com.nmp.eventos.model.constant.AccionFase;
 import mx.com.nmp.eventos.model.constant.Constants;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.Acciones;
@@ -13,15 +12,12 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountResponse;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.server.ResponseStatusException;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
@@ -293,6 +289,6 @@ class EventServiceTest {
                 "}";
         Gson gson = new Gson();
         Acciones acciones = gson.fromJson(json, Acciones.class);
-        AccionFase.setAccionFase(acciones);
+        //AccionFase.setAccionFase(acciones);
     }
 }

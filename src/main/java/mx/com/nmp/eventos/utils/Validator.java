@@ -1,6 +1,6 @@
 package mx.com.nmp.eventos.utils;
 
-import mx.com.nmp.eventos.model.constant.AccionFase;
+import mx.com.nmp.eventos.model.constant.AccionFaseApp;
 import mx.com.nmp.eventos.model.constant.Nivel;
 import mx.com.nmp.eventos.model.response.Accion;
 import mx.com.nmp.eventos.model.response.Fase;
@@ -18,21 +18,21 @@ public class Validator {
         return false;
     }
 
-    public static Boolean validateAction(String action){
-        for(int i = 0; i < AccionFase.accionFase.getAcciones().size(); i++){
-            if(action.equals(AccionFase.accionFase.getAcciones().get(i).getNombre())){
+    public static Boolean validateAction(String action, String appName){
+        for(int i = 0; i < AccionFaseApp.app.get(appName).getAcciones().size(); i++){
+            if(action.equals(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre())){
                 return true;
             }
         }
         return false;
     }
 
-    public static Boolean validateActionPhase(String action, String phase) {
-        for(int i = 0; i < AccionFase.accionFase.getAcciones().size(); i++){
-            if(action.equalsIgnoreCase(AccionFase.accionFase.getAcciones().get(i).getNombre())){
-                List<Fase> fases = AccionFase.accionFase.getAcciones().get(i).getFases();
-                for (int j = 0; j < fases.size(); j++) {
-                    if(fases.get(j).getNombre().equals(phase)){
+    public static Boolean validateActionPhase(String action, String phase, String appName) {
+        for(int i = 0; i < AccionFaseApp.app.get(appName).getAcciones().size(); i++){
+            if(action.equalsIgnoreCase(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre())){
+                List<Fase> fases = AccionFaseApp.app.get(appName).getAcciones().get(i).getFases();
+                for (Fase fase : fases) {
+                    if (fase.getNombre().equals(phase)) {
                         return true;
                     }
                 }

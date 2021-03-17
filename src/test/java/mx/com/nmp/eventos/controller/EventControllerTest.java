@@ -1,27 +1,16 @@
 package mx.com.nmp.eventos.controller;
 
 import com.google.gson.Gson;
-import mx.com.nmp.eventos.model.constant.AccionFase;
-import mx.com.nmp.eventos.model.nr.Evento;
-import mx.com.nmp.eventos.model.nr.EventoDto;
 import mx.com.nmp.eventos.model.response.Acciones;
-import mx.com.nmp.eventos.model.response.DashBoard;
-import mx.com.nmp.eventos.model.response.SecondLevel;
 import mx.com.nmp.eventos.service.EventService;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventControllerTest {
@@ -204,7 +193,7 @@ public class EventControllerTest {
                 "}";
         Gson gson = new Gson();
         Acciones acciones = gson.fromJson(json, Acciones.class);
-        AccionFase.setAccionFase(acciones);
+        //AccionFase.setAccionFase(acciones);
     }
 
 }
