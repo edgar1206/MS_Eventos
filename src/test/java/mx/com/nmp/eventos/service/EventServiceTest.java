@@ -108,7 +108,7 @@ class EventServiceTest {
         eventoTest.setEventType(eventType);
         return eventoTest;
     }
-
+/*
     @Test
     void getDashboard(){
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
@@ -152,7 +152,7 @@ class EventServiceTest {
         }
         assertTrue(thrown);
     }
-
+*/
     @Test
     void addEventException(){
             eventService.addEvent(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089", "Usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"));

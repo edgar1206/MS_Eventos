@@ -36,7 +36,7 @@ public class EventControllerTest {
     public void setUp(){
         cargaAccionFase();
     }
-
+/*
     @Test
     public void getDashboard() {
         List<DashBoard> dashBoards = new ArrayList<>();
@@ -76,7 +76,7 @@ public class EventControllerTest {
         eventController.addEvent(evento);
         verify(serviceLog).addEvent(any(Evento.class));
     }
-
+*/
     private void cargaAccionFase(){
         String json = "{\n" +
                 "    \"acciones\": [\n" +
