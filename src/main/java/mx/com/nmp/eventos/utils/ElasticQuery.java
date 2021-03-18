@@ -190,11 +190,13 @@ public class ElasticQuery {
                 .gte("now-" + month + "M/M")
                 .lte("now")
                 .timeZone(getUtc(timeZone)));
-        TermsAggregationBuilder subAggregation = AggregationBuilders.terms("phase")
-            .field("eventPhase.keyword").size(100);
+        TermsAggregationBuilder levelAggregation = AggregationBuilders.terms("level")
+                .field("eventLevel.keyword").size(100);
+        TermsAggregationBuilder phaseAggregation = AggregationBuilders.terms("phase")
+                .field("eventPhase.keyword").subAggregation(levelAggregation).size(100);
         TermsAggregationBuilder aggregation = AggregationBuilders.terms("action")
-            .field("eventAction.keyword")
-            .subAggregation(subAggregation).size(100);
+                .field("eventAction.keyword")
+                .subAggregation(phaseAggregation).size(100);
         sourceBuilder.query(boolQueryBuilder);
         sourceBuilder.aggregation(aggregation);
         SearchRequest searchRequest = new SearchRequest();

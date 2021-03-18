@@ -23,7 +23,6 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.time.*;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
@@ -58,7 +58,10 @@ public class EventService {
     //// Dashboard
 
     public List<DashBoard> getDashboard(String appName){
-        getFaseAction(appName);
+        //getFaseAction(appName);
+        if(AccionFaseApp.app.get(appName) == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de app no valido o no se encontraron acciones.");
+        }
         List<DashBoard> boards = new ArrayList<>();
         getEventActionLevel(appName, boards);
         boards.add(getEventWeek(appName));
@@ -626,8 +629,10 @@ public class EventService {
             LOGGER.info("Error: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        Acciones acciones = new Acciones();
+        Acciones accionesApp = new Acciones();
+        Nivel nivelesApp = new Nivel();
         List<Accion> accionList = new ArrayList<>();
+        List<String> niveles = new ArrayList<>();
         Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
         for (Terms.Bucket action : actions.getBuckets()) {
@@ -639,17 +644,24 @@ public class EventService {
                 Fase fase = new Fase();
                 fase.setNombre(phase.getKeyAsString().trim());//--
                 fases.add(fase);
+
+                ParsedStringTerms levels = (ParsedStringTerms) phase.getAggregations().getAsMap().get("level");
+                for (Terms.Bucket level : levels.getBuckets()) {
+                    niveles.add(level.getKeyAsString().toUpperCase().trim());
+                }
             }
             accion.setFases(fases);
             accionList.add(accion);
         }
-
+        niveles = niveles.stream().distinct().collect(Collectors.toList());
         accionList = Validator.validateActionPhase(accionList);//
-        acciones.setAcciones(accionList);
+        accionesApp.setAcciones(accionList);
+        nivelesApp.setLevels(niveles);
 
-        AccionFaseApp.app.put(appName,acciones);
+        AccionFaseApp.app.put(appName,accionesApp);
+        AccionFaseApp.levels.put(appName,nivelesApp);
 
-        return acciones;
+        return accionesApp;
     }
 
 }

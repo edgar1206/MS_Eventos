@@ -9,4 +9,6 @@ public class AccionFaseApp {
 
     public static Map<String, Acciones> app = new HashMap<>();
 
+    public static Map<String, Nivel> levels = new HashMap<>();
+
 }

@@ -29,7 +29,7 @@ public class Validator {
             }
             return false;
         }catch (NullPointerException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de app no valido");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de app no valido o no se encontraron acciones.");
         }
 
     }
@@ -48,7 +48,7 @@ public class Validator {
             }
             return false;
         }catch (NullPointerException e){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de app no valido");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de app no valido o no se encontraron acciones.");
         }
     }
 
