@@ -446,24 +446,24 @@ public class EventService {
 
         Map<String, Aggregation> results = searchResponse.getAggregations().getAsMap();
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
-        int pos = 0;
         for (Terms.Bucket action : actions.getBuckets()) {
+            int pos = 0;
             for (Accion accion : acciones.getAcciones()) {
                 if(action.getKeyAsString().trim().equals(accion.getNombre())){
                     labelsAction.add(accion.getNombre());
-                    pos ++;
                     ParsedStringTerms levels = (ParsedStringTerms) action.getAggregations().getAsMap().get("level");
-                    int posLevel = 0;
                     for (Terms.Bucket level : levels.getBuckets()) {
+                        int posLevel = 0;
                         for (String nivel : labelsLevel) {
                             if(nivel.equalsIgnoreCase(level.getKeyAsString().trim())){
-                                data[pos][posLevel] += level.getDocCount();
+                                data[posLevel][pos] += level.getDocCount();
                             }
+                            posLevel ++;
+                            if(posLevel == data.length) posLevel = 0;
                         }
-                        posLevel ++;
-                        if(posLevel == data.length) posLevel = 0;
                     }
                 }
+                pos ++;
             }
         }
         eventAction.setData(dataAction);
