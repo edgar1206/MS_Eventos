@@ -2,6 +2,7 @@ package mx.com.nmp.eventos.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import mx.com.nmp.eventos.model.constant.AccionFaseApp;
 import mx.com.nmp.eventos.model.constant.Constants;
 import mx.com.nmp.eventos.model.nr.Evento;
 import mx.com.nmp.eventos.model.response.Acciones;
@@ -12,23 +13,27 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.core.CountResponse;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class EventServiceTest {
@@ -60,7 +65,7 @@ class EventServiceTest {
     @BeforeEach
     void setUp() throws Exception {
         index="smnr_mimonte_eventos";
-    try {
+        try {
             embeddedElastic = EmbeddedElastic.builder()
                     .withIndex(index)
                     .withElasticVersion(EMBEDDED_ELASTIC_VERSION)
@@ -76,9 +81,9 @@ class EventServiceTest {
             embeddedElastic.start();
             insertGeneric(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089", "Usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"), restHighLevelClient, "1");
             insertGeneric(getEvento("2","MiMonte", "Microservicios-L2" ,"INFO","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089","usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"), restHighLevelClient, "2");
-    }catch(final Exception e) {
-        throw new RuntimeException("EmbeddedElastic, can not initialize");
-    }
+        }catch(final Exception e) {
+            throw new RuntimeException("EmbeddedElastic, can not initialize");
+        }
 
         eventService.setRestHighLevelClient(restHighLevelClient);
     }
@@ -104,12 +109,12 @@ class EventServiceTest {
         eventoTest.setEventType(eventType);
         return eventoTest;
     }
-/*
+
     @Test
     void getDashboard(){
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        Assertions.assertNotNull( eventService.getDashboard());
+        Assertions.assertNotNull( eventService.getDashboard("MiMonte"));
     }
 
     @Test
@@ -117,49 +122,55 @@ class EventServiceTest {
         cargaAccionFase();
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        Assertions.assertNotNull(eventService.getSecondLevel("Login"));
+        Assertions.assertNotNull(eventService.getSecondLevel("Login","MiMonte"));
     }
     @Test
     void getThirdLevel()  {
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        Assertions.assertNotNull(eventService.getThirdLevel("Login", "Usuario Monte"));
+        Assertions.assertNotNull(eventService.getThirdLevel("Login", "Usuario Monte","MiMonte"));
     }
 
     @Test
     void getFourthLevelParametros() {
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        Assertions.assertEquals(eventService.getFourthLevel("Autenticar","Token refresh", "error","2020-12-01", "2021-01-25").size(),0);
+        Assertions.assertEquals(eventService.getFourthLevel("Autenticar","Token refresh", "error","2020-12-01", "2021-01-25","MiMonte").size(),0);
     }
     @Test
     void getFourthLevel() {
         Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
         Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
-        Assertions.assertEquals(eventService.getFourthLevel(null,null, null,"2020-12-01", "2021-01-25").size(),0);
+        Assertions.assertEquals(eventService.getFourthLevel(null,null, null,"2020-12-01", "2021-01-25","MiMonte").size(),0);
     }
     @Test
     void getFourthLevelException() {
         boolean thrown = false;
         try {
-            eventService.getFourthLevel("Autenticar",null, "error","2020-12-01", "2021-01-25");;
+            eventService.getFourthLevel("Autenticar",null, "error","2020-12-01", "2021-01-25","MiMonte");;
         } catch (ResponseStatusException e) {
             thrown = true;
         }
         assertTrue(thrown);
     }
-*/
+
     @Test
     void addEventException(){
-            eventService.addEvent(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089", "Usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"));
-            verify(repositoryLog).save(any(Evento.class));
+        eventService.addEvent(getEvento("1", "MiMonte", "Microservicios-L2","ERROR","Usuario Monte","https://rsi.montepiedad.com.mx//NMP/GestionClientes/Cliente/v2/usuarioMonte:8089", "Usuario Monte", "Login","Elemento configuracion","prueba","prueba","prueba"));
+        verify(repositoryLog).save(any(Evento.class));
     }
-
+    @Test
+    void getfaseAction(){
+        Mockito.when(constants.getTIME_ZONE()).thenReturn("America/Mexico_City");
+        Mockito.when(constants.getINDICE()).thenReturn("smnr_mimonte_eventos");
+        Mockito.when(constants.getMONTH()).thenReturn("4");
+        eventService.getFaseAction("MiMonte");
+    }
     private static <T> Map<String, Object> transformerObject(T clazz) {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.convertValue(clazz, Map.class);
     }
-     private static <T> void insertGeneric(T clazz, RestHighLevelClient client, String id) throws IOException{
+    private static <T> void insertGeneric(T clazz, RestHighLevelClient client, String id) throws IOException{
         IndexRequest indexRequest = new IndexRequest("smnr_mimonte_eventos", "doc", id).source(transformerObject(clazz));
     }
     private void cargaAccionFase(){
@@ -289,6 +300,8 @@ class EventServiceTest {
                 "}";
         Gson gson = new Gson();
         Acciones acciones = gson.fromJson(json, Acciones.class);
-        //AccionFase.setAccionFase(acciones);
+        Map<String, Acciones> mapa = new HashMap<>();
+        mapa.put("MiMonte",acciones);
+        AccionFaseApp.app=mapa;
     }
 }

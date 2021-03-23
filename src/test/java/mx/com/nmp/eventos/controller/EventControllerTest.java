@@ -1,16 +1,30 @@
 package mx.com.nmp.eventos.controller;
 
 import com.google.gson.Gson;
+import mx.com.nmp.eventos.model.constant.AccionFaseApp;
+import mx.com.nmp.eventos.model.nr.Evento;
+import mx.com.nmp.eventos.model.nr.EventoDto;
 import mx.com.nmp.eventos.model.response.Acciones;
+import mx.com.nmp.eventos.model.response.DashBoard;
+import mx.com.nmp.eventos.model.response.SecondLevel;
 import mx.com.nmp.eventos.service.EventService;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventControllerTest {
@@ -23,41 +37,70 @@ public class EventControllerTest {
 
     @Before
     public void setUp(){
+        serviceLog.getFaseAction("MiMonte");
         cargaAccionFase();
+
     }
-/*
+
     @Test
     public void getDashboard() {
         List<DashBoard> dashBoards = new ArrayList<>();
-        when(serviceLog.getDashboard()).thenReturn(dashBoards);
-        Assert.assertEquals(eventController.getDashboard(),dashBoards);
+        when(serviceLog.getDashboard("MiMonte")).thenReturn(dashBoards);
+        Assert.assertEquals(eventController.getDashboard("MiMonte"),dashBoards);
     }
 
     @Test
     public void getSecondLevel(){
         SecondLevel secondLevel = new SecondLevel();
-        when(serviceLog.getSecondLevel("Login")).thenReturn(secondLevel);
-        Assert.assertEquals(eventController.getSecondLevel("Login"),secondLevel);
+        when(serviceLog.getSecondLevel("Login","MiMonte")).thenReturn(secondLevel);
+        Assert.assertEquals(eventController.getSecondLevel("Login","MiMonte"),secondLevel);
+    }
+    @Test
+    public void getSecondLevelException(){
+        boolean thrown = false;
+        try {
+            eventController.getSecondLevel("Usuario","MiMonte");
+        } catch (ResponseStatusException e) {
+            thrown = true;
+        }
     }
 
     @Test
     public void getThirdLevel(){
         List<DashBoard> dashBoards = new ArrayList<>();
-        when( serviceLog.getThirdLevel("Login", "Autenticar")).thenReturn(dashBoards);
-        Assert.assertEquals(eventController.getThirdLevel("Login","Autenticar"),dashBoards);
+        when( serviceLog.getThirdLevel("Login", "Autenticar","MiMonte")).thenReturn(dashBoards);
+        Assert.assertEquals(eventController.getThirdLevel("Login","Autenticar","MiMonte"),dashBoards);
     }
-  @Test
-  public void getFourthLevelParemetros(){
-      List<Evento> eventos = new ArrayList<>();
-      when(serviceLog.getFourthLevel("Login", "Autenticar","error", "2021-01-22","2021-01-22")).thenReturn(eventos);
-      Assert.assertEquals(eventController.getFourthLevel("Autenticar","Login","error", "2021-01-22"),eventos);
+    @Test
+    public void getThirdLevelException(){
+        boolean thrown = false;
+        try {
+            eventController.getThirdLevel("Login","Autenticarr","MiMonte");
+        } catch (ResponseStatusException e) {
+            thrown = true;
+        }
+    }
+    @Test
+    public void getFourthLevel(){
+        List<Evento> eventos = new ArrayList<>();
+//      when(serviceLog.getFourthLevel("Login", "Autenticarr","error", "2021-01-22","2021-01-22","MiMonte")).thenReturn(eventos);
+        Assert.assertEquals(eventController.getFourthLevel("MiMonte","Autenticar","Login","error", "2021-01-22"),eventos);
+    }
+    @Test
+    public void getFourthLevelException(){
+        boolean thrown = false;
+        try {
+            eventController.getFourthLevel("MiMonte","Autenticar","Login","error", "2021-01-22");
+        } catch (ResponseStatusException e) {
+            thrown = true;
+        }
 
-  }
+    }
     @Test
     public void getActions(){
-      Acciones acciones = new Acciones();
-      when(serviceLog.getActionsPhases()).thenReturn(acciones);
-      Assert.assertEquals(eventController.getActionPhase(),acciones);
+        Acciones acciones = new Acciones();
+        when(serviceLog.getFaseAction("MiMonte")).thenReturn(acciones);
+        Assert.assertEquals(eventController.getActionPhase("MiMonte"),acciones);
     }
     @Test
     public void addEvento(){
@@ -65,7 +108,7 @@ public class EventControllerTest {
         eventController.addEvent(evento);
         verify(serviceLog).addEvent(any(Evento.class));
     }
-*/
+
     private void cargaAccionFase(){
         String json = "{\n" +
                 "    \"acciones\": [\n" +
@@ -193,7 +236,9 @@ public class EventControllerTest {
                 "}";
         Gson gson = new Gson();
         Acciones acciones = gson.fromJson(json, Acciones.class);
-        //AccionFase.setAccionFase(acciones);
+        Map<String, Acciones> mapa = new HashMap<>();
+        mapa.put("MiMonte",acciones);
+        AccionFaseApp.app=mapa;
     }
 
 }
