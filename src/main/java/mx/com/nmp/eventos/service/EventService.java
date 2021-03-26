@@ -560,8 +560,8 @@ public class EventService {
         Map<String, Aggregation> results = searchResponse.getAggregations().getAsMap();
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
         int posAction = 0;
-        for (Terms.Bucket action : actions.getBuckets()) {
-            for (String accion : labels) {
+        for (String accion : labels) {
+            for (Terms.Bucket action : actions.getBuckets()) {
                 if(accion.equals(action.getKeyAsString().trim())){
                     data[posAction][mes] = action.getDocCount();
                 }
