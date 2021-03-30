@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin(origins = "*", methods = {RequestMethod.GET})
@@ -58,7 +60,8 @@ public class EventController {
     public SecondLevel getSecondLevel(@RequestParam("action")String action, @RequestHeader String appName){
         if(action.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
         if(Validator.validateAction(action, appName)){
-            return serviceLog.getSecondLevel(action,appName);
+            Map mapa=concatenar(action,null);
+            return serviceLog.getSecondLevel(mapa.get("accion").toString(),appName);
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, acción no válida.");
     }
@@ -68,7 +71,8 @@ public class EventController {
         if(fase.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
         if(accion.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error, parametro nulo o vacio.");
         if(Validator.validateActionPhase(accion, fase, appName)){
-            return serviceLog.getThirdLevel(accion, fase, appName);
+            Map mapa=concatenar(accion,fase);
+            return serviceLog.getThirdLevel(mapa.get("accion").toString(), mapa.get("fase").toString(), appName);
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
     }
@@ -76,16 +80,29 @@ public class EventController {
     @GetMapping(value = "/fourth_level")
     public List<Evento> getFourthLevel(@RequestHeader String appName, @RequestParam(value="phase", required=false)String fase, @RequestParam(value="action", required=false)String accion, @RequestParam(value="level", required=false)String nivel, @RequestParam(value="date", required=true)String fecha){
         if(accion != null && fase != null && nivel!=null && (!Validator.validateActionPhase(accion, fase, appName) || !Validator.validateLevel(nivel))){
-
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Error, parametros no validos.");
 
         }
-        return serviceLog.getFourthLevel(accion,fase,nivel,fecha,fecha,appName);
+        Map mapa=concatenar(accion,fase);
+        return serviceLog.getFourthLevel(mapa.get("accion").toString(), mapa.get("fase").toString(),nivel,fecha,fecha,appName);
     }
 
     @GetMapping(value = "/actions")
     public Acciones getActionPhase(@RequestHeader String appName){
         return serviceLog.getFaseAction(appName);
+    }
+
+    private Map concatenar(String accion, String fase){
+        if(accion.equals("OpenPay read customer list from merchant - Lista vacia")){
+            accion=accion+" ";
+        }
+        if(fase!=null &&fase.equals("Registro Tarjeta")){
+            fase=fase+" ";
+        }
+        Map mapa = new HashMap();
+        mapa.put("accion",accion);
+        mapa.put("fase",fase);
+        return mapa;
     }
 
 }
