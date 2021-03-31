@@ -23,7 +23,7 @@ public class Validator {
     public static Boolean validateAction(String action, String appName){
         try{
             for(int i = 0; i < AccionFaseApp.app.get(appName).getAcciones().size(); i++){
-                if(action.equals(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre())){
+                if(action.trim().equals(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre().trim())){
                     return true;
                 }
             }
@@ -31,16 +31,24 @@ public class Validator {
         }catch (NullPointerException e){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de app no valido o no se encontraron acciones.");
         }
+    }
 
+    public static String setAction(String action, String appName){
+        for(int i = 0; i < AccionFaseApp.app.get(appName).getAcciones().size(); i++){
+            if(action.trim().equals(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre().trim())){
+                return AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre();
+            }
+        }
+        return action;
     }
 
     public static Boolean validateActionPhase(String action, String phase, String appName) {
         try{
             for(int i = 0; i < AccionFaseApp.app.get(appName).getAcciones().size(); i++){
-                if(action.equalsIgnoreCase(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre())){
+                if(action.trim().equals(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre().trim())){
                     List<Fase> fases = AccionFaseApp.app.get(appName).getAcciones().get(i).getFases();
                     for (Fase fase : fases) {
-                        if (fase.getNombre().equals(phase)) {
+                        if (fase.getNombre().trim().equals(phase.trim())) {
                             return true;
                         }
                     }
@@ -50,6 +58,23 @@ public class Validator {
         }catch (NullPointerException e){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de app no valido o no se encontraron acciones.");
         }
+    }
+
+    public static String[] setActionPhase(String action, String phase, String appName){
+        String[] actionPhase = new String[2];
+        for(int i = 0; i < AccionFaseApp.app.get(appName).getAcciones().size(); i++){
+            if(action.trim().equals(AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre().trim())){
+                actionPhase[0] = AccionFaseApp.app.get(appName).getAcciones().get(i).getNombre();
+                List<Fase> fases = AccionFaseApp.app.get(appName).getAcciones().get(i).getFases();
+                for (Fase fase : fases) {
+                    if (fase.getNombre().trim().equals(phase.trim())) {
+                        actionPhase[1] = fase.getNombre();
+                        return actionPhase;
+                    }
+                }
+            }
+        }actionPhase[0] = action; actionPhase[1] = phase;
+        return actionPhase;
     }
 
     public static List<Accion> validateActionPhase(List<Accion> actions){

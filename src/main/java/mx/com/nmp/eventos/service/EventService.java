@@ -261,7 +261,7 @@ public class EventService {
                 Map<String, Aggregation> results = response.getAggregations().getAsMap();
                 ParsedStringTerms levels = (ParsedStringTerms) results.get("level");
                 for (Terms.Bucket level : levels.getBuckets()){
-                    if(nivel.equalsIgnoreCase(level.getKeyAsString().trim())){
+                    if(nivel.equalsIgnoreCase(level.getKeyAsString())){
                         data[dia] += level.getDocCount();
                         dataWeek[posLevel][dia] += level.getDocCount();
                     }
@@ -346,11 +346,11 @@ public class EventService {
         Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms phases = (ParsedStringTerms) results.get("phase");
         for (Terms.Bucket phase : phases.getBuckets()) {
-            if(map.get("fase").equalsIgnoreCase(phase.getKeyAsString().trim())){
+            if(map.get("fase").equalsIgnoreCase(phase.getKeyAsString())){
                 ParsedStringTerms levels = (ParsedStringTerms) phase.getAggregations().getAsMap().get("level");
                 for (Terms.Bucket level : levels.getBuckets()) {
                     Arrays.stream(Nivel.name).forEach( nivel -> {
-                        if(level.getKeyAsString().trim().equalsIgnoreCase(nivel)){
+                        if(level.getKeyAsString().equalsIgnoreCase(nivel)){
                             map.put(nivel,String.valueOf(level.getDocCount()));
                         }
                     });
@@ -401,7 +401,7 @@ public class EventService {
         int posLevel = 0;
         for (Terms.Bucket level : levels.getBuckets()){
             for (String nivel : events) {
-                if(nivel.equalsIgnoreCase(level.getKeyAsString().trim())){
+                if(nivel.equalsIgnoreCase(level.getKeyAsString())){
                     data[posLevel][dia] = level.getDocCount();
                     posLevel ++;
                     if(posLevel == events.size()) posLevel = 0;
@@ -449,13 +449,13 @@ public class EventService {
         for (Terms.Bucket action : actions.getBuckets()) {
             int pos = 0;
             for (Accion accion : acciones.getAcciones()) {
-                if(action.getKeyAsString().trim().equals(accion.getNombre())){
+                if(action.getKeyAsString().equals(accion.getNombre())){
                     labelsAction.add(accion.getNombre());
                     ParsedStringTerms levels = (ParsedStringTerms) action.getAggregations().getAsMap().get("level");
                     for (Terms.Bucket level : levels.getBuckets()) {
                         int posLevel = 0;
                         for (String nivel : labelsLevel) {
-                            if(nivel.equalsIgnoreCase(level.getKeyAsString().trim())){
+                            if(nivel.equalsIgnoreCase(level.getKeyAsString())){
                                 data[posLevel][pos] += level.getDocCount();
                             }
                             posLevel ++;
@@ -508,22 +508,23 @@ public class EventService {
         int pos = 0;
         for (Terms.Bucket action : actions.getBuckets()) {
             for (String accion : labelsAction) {
-                if(action.getKeyAsString().trim().equals(accion)){
+                if(action.getKeyAsString().equals(accion)){
                     dataAction[pos] = action.getDocCount();
-                    pos ++;
+
 
                     ParsedStringTerms levels = (ParsedStringTerms) action.getAggregations().getAsMap().get("level");
                     int posLevel = 0;
                     for (Terms.Bucket level : levels.getBuckets()) {
                         for (String nivel : labelsLevel) {
-                            if(nivel.equalsIgnoreCase(level.getKeyAsString().trim())){
+                            if(nivel.equalsIgnoreCase(level.getKeyAsString())){
                                 dataLevel[posLevel] += level.getDocCount();
                             }
+                            posLevel ++;
                         }
-                        posLevel ++;
                         if(posLevel == dataLevel.length) posLevel = 0;
                     }
                 }
+                pos ++;
             }
         }
         eventAction.setData(dataAction);
@@ -562,7 +563,7 @@ public class EventService {
         int posAction = 0;
         for (String accion : labels) {
             for (Terms.Bucket action : actions.getBuckets()) {
-                if(accion.equals(action.getKeyAsString().trim())){
+                if(accion.equals(action.getKeyAsString())){
                     data[posAction][mes] = action.getDocCount();
                 }
             }
@@ -630,38 +631,47 @@ public class EventService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         Acciones accionesApp = new Acciones();
+        Acciones accionesAppTrim = new Acciones();
         Nivel nivelesApp = new Nivel();
         List<Accion> accionList = new ArrayList<>();
         List<String> niveles = new ArrayList<>();
+        List<Accion> accionListTrim = new ArrayList<>();
         Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
         for (Terms.Bucket action : actions.getBuckets()) {
             Accion accion = new Accion();
-            accion.setNombre(action.getKeyAsString().trim());//--
+            accion.setNombre(action.getKeyAsString());//--
+            Accion accionTrim = new Accion();
+            accionTrim.setNombre(action.getKeyAsString().trim());//--
             List<Fase> fases = new ArrayList<>();
+            List<Fase> fasestrim = new ArrayList<>();
             ParsedStringTerms phases = (ParsedStringTerms) action.getAggregations().getAsMap().get("phase");
             for (Terms.Bucket phase : phases.getBuckets()) {
                 Fase fase = new Fase();
-                fase.setNombre(phase.getKeyAsString().trim());//--
+                Fase faseTrim = new Fase();
+                fase.setNombre(phase.getKeyAsString());//--
+                faseTrim.setNombre(phase.getKeyAsString().trim());//--
                 fases.add(fase);
-
+                fasestrim.add(fase);
                 ParsedStringTerms levels = (ParsedStringTerms) phase.getAggregations().getAsMap().get("level");
                 for (Terms.Bucket level : levels.getBuckets()) {
-                    niveles.add(level.getKeyAsString().toUpperCase().trim());
+                    niveles.add(level.getKeyAsString().toUpperCase());
                 }
             }
             accion.setFases(fases);
             accionList.add(accion);
+            accionTrim.setFases(fasestrim);
+            accionListTrim.add(accionTrim);
         }
         niveles = niveles.stream().distinct().collect(Collectors.toList());
         accionList = Validator.validateActionPhase(accionList);//
         accionesApp.setAcciones(accionList);
+        accionListTrim = Validator.validateActionPhase(accionList);//
+        accionesAppTrim.setAcciones(accionListTrim);
         nivelesApp.setLevels(niveles);
-
         AccionFaseApp.app.put(appName,accionesApp);
         AccionFaseApp.levels.put(appName,nivelesApp);
-
-        return accionesApp;
+        return accionesAppTrim;
     }
 
 }
