@@ -650,9 +650,9 @@ public class EventService {
                 Fase fase = new Fase();
                 Fase faseTrim = new Fase();
                 fase.setNombre(phase.getKeyAsString());//--
-                faseTrim.setNombre(phase.getKeyAsString().trim());//--
                 fases.add(fase);
-                fasestrim.add(fase);
+                faseTrim.setNombre(phase.getKeyAsString().trim());//--
+                fasestrim.add(faseTrim);
                 ParsedStringTerms levels = (ParsedStringTerms) phase.getAggregations().getAsMap().get("level");
                 for (Terms.Bucket level : levels.getBuckets()) {
                     niveles.add(level.getKeyAsString().toUpperCase());
@@ -666,7 +666,7 @@ public class EventService {
         niveles = niveles.stream().distinct().collect(Collectors.toList());
         accionList = Validator.validateActionPhase(accionList);//
         accionesApp.setAcciones(accionList);
-        accionListTrim = Validator.validateActionPhase(accionList);//
+        accionListTrim = Validator.validateActionPhase(accionListTrim);//
         accionesAppTrim.setAcciones(accionListTrim);
         nivelesApp.setLevels(niveles);
         AccionFaseApp.app.put(appName,accionesApp);
