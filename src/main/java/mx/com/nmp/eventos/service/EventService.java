@@ -502,11 +502,10 @@ public class EventService {
         Arrays.fill(dataAction, 0L);
         Long[] dataLevel = new Long[Nivel.name.length];
         Arrays.fill(dataLevel, 0L);
-
         Map<String, Aggregation> results = searchResponse.getAggregations().getAsMap();
         ParsedStringTerms actions = (ParsedStringTerms) results.get("action");
-        int pos = 0;
         for (Terms.Bucket action : actions.getBuckets()) {
+            int pos = 0;
             for (String accion : labelsAction) {
                 if(action.getKeyAsString().equals(accion)){
                     dataAction[pos] = action.getDocCount();
