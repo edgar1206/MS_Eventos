@@ -399,14 +399,14 @@ public class EventService {
         Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms levels = (ParsedStringTerms) results.get("level");
         int posLevel = 0;
-        for (Terms.Bucket level : levels.getBuckets()){
-            for (String nivel : events) {
+        for (String nivel : events){
+            for (Terms.Bucket level : levels.getBuckets()) {
                 if(nivel.equalsIgnoreCase(level.getKeyAsString())){
                     data[posLevel][dia] = level.getDocCount();
-                    posLevel ++;
                     if(posLevel == events.size()) posLevel = 0;
                 }
             }
+            posLevel ++;
         }
     }
 
