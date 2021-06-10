@@ -3,7 +3,7 @@ applications:
   - name: {APPNAME}
     buildpack: ${BUILDPACK}
     memory: ${MEMORY}
-    timeout: ${TIMEOUT}
+    timeout: 180
     path: ${PATH}
     env:
       TZ: ${TZ}
