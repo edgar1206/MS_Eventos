@@ -1,6 +1,6 @@
 ---
 applications:
-  - name: dev1775-ms-eventos
+  - name: ${APPNAME}
     buildpack: https://github.com/cloudfoundry/java-buildpack.git
     memory: 1G
     timeout: 180
