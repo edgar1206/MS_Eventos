@@ -132,7 +132,7 @@ public class EventService {
             countActionByMonth(data, events, j, appName);
         }
         for(int m = 0; m < 3 ; m ++){
-           setMonth(labels,m);
+            setMonth(labels,m);
         }
         long total = 0;
         for (Long[] datum : data) {
@@ -399,14 +399,14 @@ public class EventService {
         Map<String, Aggregation> results = response.getAggregations().getAsMap();
         ParsedStringTerms levels = (ParsedStringTerms) results.get("level");
         int posLevel = 0;
-        for (String nivel : events){
-            for (Terms.Bucket level : levels.getBuckets()) {
+        for (Terms.Bucket level : levels.getBuckets()){
+            for (String nivel : events) {
                 if(nivel.equalsIgnoreCase(level.getKeyAsString())){
                     data[posLevel][dia] = level.getDocCount();
+                    posLevel ++;
                     if(posLevel == events.size()) posLevel = 0;
                 }
             }
-            posLevel ++;
         }
     }
 

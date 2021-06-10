@@ -88,7 +88,7 @@ public class EventController {
 
     @GetMapping(value = "/actions")
     public Acciones getActionPhase(@RequestHeader String appName){
-       return serviceLog.getFaseAction(appName);
+        return serviceLog.getFaseAction(appName);
     }
 
 }
