@@ -1,18 +1,7 @@
 ---
 applications:
-  - name: {APPNAME}
-    buildpack: ${BUILDPACK}
-    memory: ${MEMORY}
+  - name: dev1775.ms-generador-folios
+    buildpack: https://github.com/cloudfoundry/java-buildpack.git
+    memory: 1G
     timeout: 180
-    path: ${PATH}
-    env:
-      TZ: ${TZ}
-      ELASTICSEARCH_HOST: ${ELASTICSEARCH_HOST}
-      ELASTICSEARCH_PROTOCOL: ${ELASTICSEARCH_PROTOCOL}
-      ELASTICSEARCH_PORT: ${ELASTICSEARCH_PORT}
-      ELASTICSEARCH_USER: ${ELASTICSEARCH_USER}
-      ELASTICSEARCH_SCT: ${ELASTICSEARCH_SCT}
-      ELASTICSEARCH_INDEX: ${ELASTICSEARCH_INDEX}
-      ERROR_INCLUDE_MESSAGE: ALWAYS
-      MONTH: 4
-      TIME_ZONE: ${TIME_ZONE}
+    path: target/eventos-0.0.1-SNAPSHOT.jar
